@@ -20,12 +20,12 @@
     function loadDropdownData() {
       $.ajax({
         type: 'POST',
-        url: base_url + 'Back_Menu/get_dropdown_data',
+        url: base_url + 'menu/get_dropdown_data',
         dataType: 'json',
         success: function(result) {
           if (result.status === 'success') {
-            dropdownData.categories = result.data.kategori || [];
-            dropdownData.thematics = result.data.thematik || [];
+            dropdownData.categories = result.kategori || [];
+            dropdownData.thematics = result.thematik || [];
             populateDropdowns();
           }
         },
@@ -54,7 +54,7 @@
     // ===== LOAD DATA =====
     function loadData() {
       $.ajax({
-        url: base_url + 'Back_Menu/tampil',
+        url: base_url + 'menu/tampil',
         type: 'GET',
         dataType: 'json',
         success: function(result) {
@@ -174,24 +174,26 @@
     // ===== EDIT DATA =====
     window.editData = function(id) {
       $.ajax({
-        url: base_url + 'Back_Menu/get_menu_by_id',
+        url: base_url + 'menu/edit_data',
         type: 'POST',
         data: {
-          id_menu: id
+          id: id
         },
         dataType: 'json',
         success: function(res) {
           if (res.status === 'success') {
             var data = res.data;
 
-            $('#id_menu').val(data.id_menu);
+            $('#id_komponen').val(data.id_komponen);
             $('#menu_nama').val(data.menu_nama);
             $('#menu_deskripsi').val(data.menu_deskripsi);
+            $('#menu_harga').val(data.harga_menu);
             $('#status_aktif').val(data.status_aktif);
+            $('#stat').val('edit');
 
             loadDropdownData();
             setTimeout(function() {
-              $('#id_kategori').val(data.id_kategori);
+              $('#id_kategori').val(data.id_kategori_menu);
               $('#id_thematik').val(data.id_thematik);
             }, 500);
 
@@ -242,10 +244,10 @@
 
     function ajaxDeleteMenu(id) {
       $.ajax({
-        url: base_url + 'Back_Menu/hapus',
+        url: base_url + 'menu/delete_data',
         type: 'POST',
         data: {
-          id_menu: id
+          id: id
         },
         dataType: 'json',
         success: function(res) {
@@ -268,7 +270,7 @@
       var formData = new FormData(this);
 
       $.ajax({
-        url: base_url + 'Back_Menu/simpan',
+        url: base_url + 'menu/save_data',
         type: 'POST',
         data: formData,
         processData: false,

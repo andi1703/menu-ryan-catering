@@ -109,4 +109,15 @@ class M_KategoriMenu extends CI_Model
   {
     return $this->db->order_by('nama_kategori', 'ASC')->get($this->table)->result_array();
   }
+
+  /**
+   * Get all kategori menu (alias untuk get_all)
+   */
+  public function get_all_kategori_menu()
+  {
+    $this->db->select('id_kategori, nama_kategori, deskripsi_kategori, active');
+    $this->db->from($this->table);
+    $this->db->order_by('nama_kategori', 'ASC');
+    return $this->db->get()->result();
+  }
 }

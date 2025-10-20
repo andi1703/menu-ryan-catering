@@ -20,10 +20,36 @@ class M_Menu extends CI_Model
   {
     return $this->db
       ->select('menu.*, kategori_menu.nama_kategori as kategori_nama, country.country_nama as country_nama')
-      ->join('kategori_menu', 'kategori_menu.id_kategori = menu.id_kategori', 'left')
+      ->join('kategori_menu', 'kategori_menu.id_kategori = menu.id_kategori_menu', 'left')
       ->join('country', 'country.id_country = menu.id_negara', 'left')
       ->get('menu')
       ->result();
+  }
+
+  /**
+   * Get all menu with kategori for regular menu dropdown
+   */
+  public function get_all_menu_with_kategori()
+  {
+    return $this->db
+      ->select('menu.*, kategori_menu.nama_kategori as kategori_nama')
+      ->join('kategori_menu', 'kategori_menu.id_kategori = menu.id_kategori_menu', 'left')
+      ->order_by('menu.menu_nama', 'ASC')
+      ->get('menu')
+      ->result();
+  }
+
+  /**
+   * Get menu with kategori by ID
+   */
+  public function get_menu_with_kategori($id)
+  {
+    return $this->db
+      ->select('menu.*, kategori_menu.nama_kategori as kategori_nama')
+      ->join('kategori_menu', 'kategori_menu.id_kategori = menu.id_kategori_menu', 'left')
+      ->where('menu.id_komponen', $id)
+      ->get('menu')
+      ->row();
   }
 
   /**
