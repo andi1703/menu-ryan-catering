@@ -32,7 +32,7 @@ class M_Menu_Regular extends CI_Model
         $this->db->select('rmk.id_komponen, m.menu_nama, k.nama_kategori as kategori_nama');
         $this->db->from('regular_menu_komponen rmk');
         $this->db->join('menu m', 'rmk.id_komponen = m.id_komponen', 'left');
-        $this->db->join('kategori_menu k', 'm.id_kategori = k.id_kategori', 'left');
+        $this->db->join('kategori_menu k', 'm.id_kategori_menu = k.id_kategori', 'left');
         $this->db->where('rmk.regular_menu_id', $menu->id);
         $komponen_query = $this->db->get();
         $menu->komponen = $komponen_query->result();
@@ -100,7 +100,7 @@ class M_Menu_Regular extends CI_Model
       ->select('menu.menu_nama, kategori_menu.nama_kategori as kategori_nama')
       ->from('regular_menu_komponen')
       ->join('menu', 'regular_menu_komponen.id_komponen = menu.id_komponen')
-      ->join('kategori_menu', 'menu.id_kategori = kategori_menu.id_kategori', 'left')
+      ->join('kategori_menu', 'menu.id_kategori_menu = kategori_menu.id_kategori', 'left')
       ->where('regular_menu_komponen.regular_menu_id', $regular_menu_id)
       ->get()
       ->result(); // return array of object
@@ -121,10 +121,10 @@ class M_Menu_Regular extends CI_Model
   public function get_komponen_by_menu_id($id)
   {
     try {
-      $this->db->select('a.id_komponen, b.menu_nama, c.nama_kategori as kategori_nama, b.menu_harga');
+      $this->db->select('a.id_komponen, b.menu_nama, c.nama_kategori as kategori_nama, b.harga_menu');
       $this->db->from('regular_menu_komponen a');
       $this->db->join('menu b', 'a.id_komponen = b.id_komponen', 'left');
-      $this->db->join('kategori_menu c', 'b.id_kategori = c.id_kategori', 'left');
+      $this->db->join('kategori_menu c', 'b.id_kategori_menu = c.id_kategori', 'left');
       $this->db->where('a.regular_menu_id', $id);
       $this->db->group_by('a.id_komponen');
       $query = $this->db->get();
