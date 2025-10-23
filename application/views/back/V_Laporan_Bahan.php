@@ -16,7 +16,7 @@
   <!-- Select2 CSS -->
   <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 
-  <style>
+  <!-- <style>
     .table thead th {
       background-color: #f8f9fa;
       color: #212529;
@@ -69,7 +69,7 @@
     .required {
       color: #dc3545;
     }
-  </style>
+  </style> -->
 </head>
 
 <body data-sidebar="dark">
@@ -77,6 +77,7 @@
     <?php
     $this->load->view('back_partial/topbar');
     $this->load->view('back_partial/sidebar');
+    $this->load->view('back_partial/head-css');
     ?>
 
     <div class="main-content">

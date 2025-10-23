@@ -3,142 +3,249 @@ defined('BASEPATH') or exit('No direct script access allowed');
 
 class Back_Bahan extends CI_Controller
 {
+
   public function __construct()
   {
     parent::__construct();
     $this->load->model('M_Bahan');
     $this->load->model('M_Satuan');
     $this->load->library('session');
-    $this->load->library('form_validation');
+    $this->load->helper('url');
   }
 
   public function index()
   {
-    $data['title'] = 'Master Bahan';
-    $data['bahan_list'] = $this->M_Bahan->getAllBahan();
-    $data['satuan_list'] = $this->M_Satuan->getAllSatuan();
-    $this->load->view('back/bahan/V_Bahan', $data);
+    try {
+      $data['bahan_list'] = $this->M_Bahan->get_all_bahan();
+      $data['satuan_list'] = $this->M_Satuan->getAllSatuan();
+
+      $this->load->view('back/bahan/V_Bahan', $data);
+    } catch (Exception $e) {
+      log_message('error', 'Bahan Index Error: ' . $e->getMessage());
+      show_error('Terjadi kesalahan saat memuat halaman: ' . $e->getMessage());
+    }
   }
 
-  public function get_data_bahan()
+  public function get_satuan_list()
   {
-    $data = $this->M_Bahan->getAllBahan();
-    echo json_encode(['show_data' => $data]);
+    try {
+      header('Content-Type: application/json');
+
+      $satuan_list = $this->M_Satuan->getAllSatuan();
+
+      if ($satuan_list) {
+        echo json_encode([
+          'status' => 'success',
+          'data' => $satuan_list
+        ]);
+      } else {
+        echo json_encode([
+          'status' => 'success',
+          'data' => []
+        ]);
+      }
+    } catch (Exception $e) {
+      log_message('error', 'Get Satuan List Error: ' . $e->getMessage());
+      echo json_encode([
+        'status' => 'error',
+        'message' => 'Gagal memuat data satuan: ' . $e->getMessage()
+      ]);
+    }
   }
 
   public function get_bahan_by_id()
   {
-    $id = $this->input->post('id');
-    $data = $this->M_Bahan->getBahanById($id);
-    if ($data) {
-      echo json_encode(['status' => 'success', 'data' => $data]);
-    } else {
-      echo json_encode(['status' => 'error', 'message' => 'Data tidak ditemukan']);
+    try {
+      header('Content-Type: application/json');
+
+      $id = $this->input->post('id');
+
+      if (empty($id) || !is_numeric($id)) {
+        echo json_encode([
+          'status' => 'error',
+          'message' => 'ID bahan tidak valid'
+        ]);
+        return;
+      }
+
+      $data = $this->M_Bahan->get_by_id($id);
+
+      if ($data) {
+        echo json_encode([
+          'status' => 'success',
+          'data' => $data
+        ]);
+      } else {
+        echo json_encode([
+          'status' => 'error',
+          'message' => 'Data bahan tidak ditemukan'
+        ]);
+      }
+    } catch (Exception $e) {
+      log_message('error', 'Get Bahan By ID Error: ' . $e->getMessage());
+      echo json_encode([
+        'status' => 'error',
+        'message' => 'Terjadi kesalahan: ' . $e->getMessage()
+      ]);
     }
   }
 
   public function save_data()
   {
-    // Set validation rules dengan pesan bahasa Indonesia
-    $this->form_validation->set_rules('nama_bahan', 'Nama Bahan', 'required|trim|min_length[2]|max_length[100]', [
-      'required' => 'Nama bahan wajib diisi',
-      'min_length' => 'Nama bahan minimal 2 karakter',
-      'max_length' => 'Nama bahan maksimal 100 karakter'
-    ]);
-    $this->form_validation->set_rules('id_satuan', 'Satuan', 'required|numeric|greater_than[0]', [
-      'required' => 'Satuan bahan wajib dipilih',
-      'numeric' => 'Satuan harus berupa angka',
-      'greater_than' => 'Satuan tidak valid'
-    ]);
-    $this->form_validation->set_rules('harga_awal', 'Harga Awal', 'required|numeric|greater_than_equal_to[0]', [
-      'required' => 'Harga awal wajib diisi',
-      'numeric' => 'Harga awal harus berupa angka',
-      'greater_than_equal_to' => 'Harga awal tidak boleh negatif'
-    ]);
-    $this->form_validation->set_rules('harga_sekarang', 'Harga Sekarang', 'required|numeric|greater_than_equal_to[0]', [
-      'required' => 'Harga sekarang wajib diisi',
-      'numeric' => 'Harga sekarang harus berupa angka',
-      'greater_than_equal_to' => 'Harga sekarang tidak boleh negatif'
-    ]);
-    $this->form_validation->set_rules('keterangan', 'Keterangan', 'trim|max_length[500]', [
-      'max_length' => 'Keterangan maksimal 500 karakter'
-    ]);
+    try {
+      header('Content-Type: application/json');
 
-    if ($this->form_validation->run() == FALSE) {
-      $errors = validation_errors();
-      echo json_encode(['status' => 'error', 'message' => strip_tags($errors)]);
-      return;
-    }
+      $stat = $this->input->post('stat');
+      $id = $this->input->post('id');
+      $nama_bahan = trim($this->input->post('nama_bahan'));
+      $id_satuan = $this->input->post('id_satuan');
+      $harga_awal = $this->input->post('harga_awal');
+      $harga_sekarang = $this->input->post('harga_sekarang');
 
-    // Periksa apakah satuan yang dipilih valid
-    $satuan_exists = $this->M_Satuan->getSatuanById($this->input->post('id_satuan'));
-    if (!$satuan_exists) {
-      echo json_encode(['status' => 'error', 'message' => 'Satuan yang dipilih tidak tersedia dalam sistem']);
-      return;
-    }
-
-    // Periksa duplikasi nama bahan untuk operasi tambah
-    if ($this->input->post('stat') != 'edit') {
-      $duplicate_check = $this->M_Bahan->checkDuplicateName($this->input->post('nama_bahan'));
-      if ($duplicate_check) {
-        echo json_encode(['status' => 'error', 'message' => 'Nama bahan sudah terdaftar, silakan gunakan nama yang berbeda']);
+      // Validasi input
+      if (empty($nama_bahan) || empty($id_satuan) || empty($harga_awal) || empty($harga_sekarang)) {
+        echo json_encode([
+          'status' => 'error',
+          'message' => 'Semua field wajib diisi'
+        ]);
         return;
       }
-    }
 
-    $data = [
-      'nama_bahan' => ucwords(strtolower(trim($this->input->post('nama_bahan')))),
-      'id_satuan' => $this->input->post('id_satuan'),
-      'harga_awal' => $this->input->post('harga_awal'),
-      'harga_sekarang' => $this->input->post('harga_sekarang'),
-      'keterangan' => trim($this->input->post('keterangan')) ?: null,
-    ];
+      if ($stat === 'edit' && (empty($id) || !is_numeric($id))) {
+        echo json_encode([
+          'status' => 'error',
+          'message' => 'ID bahan tidak valid untuk update'
+        ]);
+        return;
+      }
 
-    if ($this->input->post('stat') == 'edit') {
-      $id = $this->input->post('id');
+      // Prepare data
+      $data = [
+        'nama_bahan' => $nama_bahan,
+        'id_satuan' => intval($id_satuan),
+        'harga_awal' => floatval($harga_awal),
+        'harga_sekarang' => floatval($harga_sekarang)
+      ];
 
-      // Periksa duplikasi nama jika mengubah nama bahan
-      $existing_bahan = $this->M_Bahan->getBahanById($id);
-      if ($existing_bahan && $existing_bahan['nama_bahan'] != $data['nama_bahan']) {
-        $duplicate_check = $this->M_Bahan->checkDuplicateName($data['nama_bahan'], $id);
-        if ($duplicate_check) {
-          echo json_encode(['status' => 'error', 'message' => 'Nama bahan sudah terdaftar, silakan gunakan nama yang berbeda']);
+      if ($stat === 'add') {
+        // Check duplicate name
+        if ($this->M_Bahan->checkDuplicateName($nama_bahan)) {
+          echo json_encode([
+            'status' => 'error',
+            'message' => 'Nama bahan sudah ada, gunakan nama yang lain'
+          ]);
           return;
         }
+
+        $result = $this->M_Bahan->addBahan($data);
+        $message = 'Data bahan berhasil ditambahkan';
+      } else if ($stat === 'edit') {
+        // Check if data exists
+        $existing = $this->M_Bahan->get_by_id($id);
+        if (!$existing) {
+          echo json_encode([
+            'status' => 'error',
+            'message' => 'Data bahan tidak ditemukan'
+          ]);
+          return;
+        }
+
+        // Check duplicate name (exclude current record)
+        if ($this->M_Bahan->checkDuplicateName($nama_bahan, $id)) {
+          echo json_encode([
+            'status' => 'error',
+            'message' => 'Nama bahan sudah ada, gunakan nama yang lain'
+          ]);
+          return;
+        }
+
+        $result = $this->M_Bahan->updateBahan($id, $data);
+        $message = 'Data bahan berhasil diupdate';
+      } else {
+        echo json_encode([
+          'status' => 'error',
+          'message' => 'Status tidak valid'
+        ]);
+        return;
       }
 
-      $data['updated_at'] = date('Y-m-d H:i:s');
-      $update = $this->M_Bahan->updateBahan($id, $data);
-      if ($update) {
+      if ($result) {
         echo json_encode([
           'status' => 'success',
-          'message' => 'Data bahan "' . $data['nama_bahan'] . '" berhasil diupdate'
+          'message' => $message
         ]);
       } else {
-        echo json_encode(['status' => 'error', 'message' => 'Gagal memperbarui data bahan']);
-      }
-    } else {
-      $data['created_at'] = date('Y-m-d H:i:s');
-      $insert = $this->M_Bahan->addBahan($data);
-      if ($insert) {
         echo json_encode([
-          'status' => 'success',
-          'message' => 'Bahan "' . $data['nama_bahan'] . '" berhasil ditambahkan'
+          'status' => 'error',
+          'message' => 'Gagal menyimpan data ke database'
         ]);
-      } else {
-        echo json_encode(['status' => 'error', 'message' => 'Gagal menyimpan data bahan ke database']);
       }
+    } catch (Exception $e) {
+      log_message('error', 'Save Bahan Error: ' . $e->getMessage());
+      echo json_encode([
+        'status' => 'error',
+        'message' => 'Terjadi kesalahan sistem: ' . $e->getMessage()
+      ]);
     }
   }
 
   public function delete_data()
   {
-    $id = $this->input->post('id');
-    $delete = $this->M_Bahan->deleteBahan($id);
-    if ($delete) {
-      echo json_encode(['status' => 'success', 'message' => 'Data bahan berhasil dihapus']);
-    } else {
-      echo json_encode(['status' => 'error', 'message' => 'Gagal menghapus data']);
+    try {
+      header('Content-Type: application/json');
+
+      $id = $this->input->post('id');
+
+      if (empty($id)) {
+        echo json_encode([
+          'status' => 'error',
+          'message' => 'ID bahan tidak boleh kosong'
+        ]);
+        return;
+      }
+
+      if (!is_numeric($id) || intval($id) <= 0) {
+        echo json_encode([
+          'status' => 'error',
+          'message' => 'ID bahan tidak valid'
+        ]);
+        return;
+      }
+
+      $id = intval($id);
+
+      // Cek apakah bahan dengan ID tersebut exists
+      $existing = $this->M_Bahan->get_by_id($id);
+      if (!$existing) {
+        echo json_encode([
+          'status' => 'error',
+          'message' => 'Bahan tidak ditemukan'
+        ]);
+        return;
+      }
+
+      $nama_bahan = $existing['nama_bahan'];
+
+      // Hapus data
+      $delete_result = $this->M_Bahan->deleteBahan($id);
+
+      if ($delete_result) {
+        echo json_encode([
+          'status' => 'success',
+          'message' => 'Bahan "' . $nama_bahan . '" berhasil dihapus'
+        ]);
+      } else {
+        echo json_encode([
+          'status' => 'error',
+          'message' => 'Gagal menghapus bahan dari database'
+        ]);
+      }
+    } catch (Exception $e) {
+      log_message('error', 'Delete Bahan Error: ' . $e->getMessage());
+      echo json_encode([
+        'status' => 'error',
+        'message' => 'Terjadi kesalahan sistem: ' . $e->getMessage()
+      ]);
     }
   }
 }

@@ -16,7 +16,7 @@
   <link href="<?php echo base_url(); ?>assets_back/libs/datatables.net-select-bs4/css/select.bootstrap4.min.css" rel="stylesheet" type="text/css" />
 </head>
 
-<body data-topbar="dark" data-layout="vertical">
+<body data-sidebar="dark" data-layout="vertical">
   <!-- Begin page -->
   <div id="layout-wrapper">
 
@@ -24,6 +24,7 @@
     <?php
     $this->load->view('back_partial/topbar');
     $this->load->view('back_partial/sidebar');
+    $this->load->view('back_partial/head-css');
     ?>
 
     <!-- ✅ MAIN CONTENT -->

@@ -39,8 +39,8 @@
                             </a>
                         </li>
                         <li>
-                            <a href="<?php echo base_url('regular-menu'); ?>">
-                                <i class="fas fa-hamburger"></i>Regular Menu
+                            <a href="<?php echo base_url('menu-harian'); ?>">
+                                <i class="fas fa-calendar-alt"></i>Menu Harian
                             </a>
                         </li>
                         <li>

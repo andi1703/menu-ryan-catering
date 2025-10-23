@@ -250,12 +250,13 @@
   </style>
 </head>
 
-<body data-topbar="dark" data-layout="vertical">
+<body data-sidebar="dark" data-layout="vertical">
   <div id="layout-wrapper">
 
     <?php
     $this->load->view('back_partial/topbar');
     $this->load->view('back_partial/sidebar');
+    $this->load->view('back_partial/head-css');
     ?>
 
     <div class="main-content">

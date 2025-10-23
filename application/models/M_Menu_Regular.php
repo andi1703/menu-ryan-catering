@@ -135,4 +135,13 @@ class M_Menu_Regular extends CI_Model
       return [];
     }
   }
+
+  private function _get_datatables_query()
+  {
+    $this->db->select('regular_menu.*, kategori_menu.nama_kategori');
+    $this->db->from('regular_menu');
+    // PERBAIKI: Pastikan join menggunakan nama kolom yang benar
+    $this->db->join('kategori_menu', 'kategori_menu.id_kategori = regular_menu.id_kategori', 'left');
+    $this->db->order_by('regular_menu.id', 'DESC');
+  }
 }

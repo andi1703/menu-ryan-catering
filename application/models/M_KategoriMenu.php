@@ -4,7 +4,7 @@ defined('BASEPATH') or exit('No direct script access allowed');
 class M_KategoriMenu extends CI_Model
 {
   var $table = 'kategori_menu';
-  var $column_order = array(null, 'nama_kategori', 'deskripsi_kategori', 'active', null);
+  var $column_order = array(null, 'nama_kategori', 'deskripsi_kategori', null);
   var $column_search = array('nama_kategori', 'deskripsi_kategori');
   var $order = array('id_kategori' => 'asc'); // PERBAIKI: gunakan id_kategori
 
@@ -98,9 +98,8 @@ class M_KategoriMenu extends CI_Model
    */
   public function get_all()
   {
-    $this->db->select('id_kategori, nama_kategori, deskripsi_kategori, active');
+    $this->db->select('id_kategori, nama_kategori, deskripsi_kategori');
     $this->db->from($this->table);
-    $this->db->where('active', 1); // Hanya ambil yang aktif
     $this->db->order_by('nama_kategori', 'ASC');
     return $this->db->get()->result();
   }
@@ -115,7 +114,7 @@ class M_KategoriMenu extends CI_Model
    */
   public function get_all_kategori_menu()
   {
-    $this->db->select('id_kategori, nama_kategori, deskripsi_kategori, active');
+    $this->db->select('id_kategori, nama_kategori, deskripsi_kategori');
     $this->db->from($this->table);
     $this->db->order_by('nama_kategori', 'ASC');
     return $this->db->get()->result();

@@ -123,7 +123,7 @@ $config['allow_get_array'] = TRUE;
 | Error Logging Threshold
 |--------------------------------------------------------------------------
 */
-$config['log_threshold'] = 1; // Enable error logging
+$config['log_threshold'] = 4; // 0=Disabled, 1=Error, 2=Debug, 3=Info, 4=All
 
 /*
 |--------------------------------------------------------------------------

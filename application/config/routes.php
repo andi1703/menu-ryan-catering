@@ -144,5 +144,13 @@ $route['shift-bahan/approve_data'] = 'Back_Shift_Bahan/approve_data';
 $route['shift-bahan/load_template'] = 'Back_Shift_Bahan/load_template';
 $route['shift-bahan/report'] = 'Back_Shift_Bahan/get_bahan_usage_report';
 
+// ===== MENU HARIAN ROUTES =====
+$route['menu-harian'] = 'Back_Menu_Harian/index';
+$route['menu-harian/save'] = 'Back_Menu_Harian/save';
+$route['menu-harian/delete/(:num)'] = 'Back_Menu_Harian/delete/$1';
+$route['menu-harian/get_by_id/(:num)'] = 'Back_Menu_Harian/get_by_id/$1';
+$route['menu-harian/get_customers'] = 'Back_Menu_Harian/get_customers';
+$route['menu-harian/get_kantins'] = 'Back_Menu_Harian/get_kantins';
+
 // ===== DASHBOARD =====
 $route['dashboard'] = 'back_dashboard/index';

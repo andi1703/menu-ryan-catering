@@ -16,7 +16,7 @@
 
 <!-- <body data-sidebar="dark" > -->
 
-<body data-topbar="dark" data-layout="horizontal">
+<body data-sidebar="dark" data-layout="horizontal">
 
 
     <!-- Begin page -->
@@ -25,6 +25,7 @@
         <?php
         $this->load->view('back_partial/horizontal-topbar');
         $this->load->view('back_partial/horizontal-menu');
+        $this->load->view('back_partial/head-css');
 
         ?>
 
