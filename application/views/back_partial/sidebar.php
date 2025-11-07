@@ -11,8 +11,15 @@
 
                 <li class="menu-title">Daily Menu</li>
                 <li class="<?php echo (uri_string() == 'dailymenu') ? 'mm-active' : ''; ?>">
-                    <a href="<?php echo base_url('dailymenu'); ?>" class="waves-effect">
+                    <a href="<?php echo base_url('menu-harian'); ?>" class="waves-effect">
                         <i class="fas fa-leaf"></i><span>Daily Menu</span>
+                    </a>
+                </li>
+
+                <li class="menu-title">Report</li>
+                <li class="<?php echo (uri_string() == 'dailymenureport') ? 'mm-active' : ''; ?>">
+                    <a href="<?php echo base_url('menu-harian-report'); ?>" class="waves-effect">
+                        <i class="ri-file-list-3-line"></i><span>Daily Menu Report</span>
                     </a>
                 </li>
 
@@ -36,21 +43,6 @@
                         <li>
                             <a href="<?php echo base_url('thematik'); ?>">
                                 <i class="ri-earth-line"></i>Thematic Menu
-                            </a>
-                        </li>
-                        <li>
-                            <a href="<?php echo base_url('menu-harian'); ?>">
-                                <i class="fas fa-calendar-alt"></i>Menu Harian
-                            </a>
-                        </li>
-                        <li>
-                            <a href="<?php echo base_url('paket-menu'); ?>">
-                                <i class="fas fa-box"></i>Paket Menu
-                            </a>
-                        </li>
-                        <li>
-                            <a href="<?php echo base_url('sehat-menu'); ?>">
-                                <i class="fas fa-apple-alt"></i>Sehat Menu
                             </a>
                         </li>
                     </ul>

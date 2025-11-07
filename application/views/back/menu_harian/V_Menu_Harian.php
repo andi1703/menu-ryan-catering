@@ -12,7 +12,7 @@
 </head>
 
 <body data-sidebar="dark" data-layout="vertical">
-  <input type="hidden" id="base_url" value="<?= base_url() ?>">
+  <input type="hidden" id="ajax_url" value="<?= site_url('back_menu_harian') ?>">
 
   <div id="layout-wrapper">
     <?php
@@ -63,6 +63,7 @@
                 <div class="card-body">
                   <div id="menu-harian-table-container">
                     <div class="table-responsive">
+                      <!-- ID tabel sudah benar, JS akan mengisinya -->
                       <table class="table table-striped table-hover align-middle w-100" id="menu-harian-table" style="display: none;">
                         <thead class="table-dark">
                           <tr>
@@ -73,35 +74,13 @@
                             <th>Kantin</th>
                             <th>Jenis Menu</th>
                             <th>Nama Menu</th>
-                            <th>Total Menu/Kantin</th>
+                            <th>Kondimen Menu</th>
+                            <th>Total Order/Kantin</th>
                             <th>Aksi</th>
                           </tr>
                         </thead>
                         <tbody>
-                          <?php if (!empty($menu_harian_list)) : ?>
-                            <?php foreach ($menu_harian_list as $index => $menu) : ?>
-                              <tr>
-                                <td class="text-center fw-bold"><?= $index + 1 ?></td>
-                                <td><?= htmlspecialchars($menu['tanggal']) ?></td>
-                                <td><?= ucfirst($menu['shift']) ?></td>
-                                <td><?= htmlspecialchars($menu['nama_customer']) ?></td>
-                                <td><?= htmlspecialchars($menu['nama_kantin']) ?></td>
-                                <td><span class="badge bg-info"><?= htmlspecialchars($menu['jenis_menu']) ?></span></td>
-                                <td><?= htmlspecialchars($menu['nama_menu']) ?></td>
-                                <td class="text-end"><?= number_format($menu['total_menu_perkantin'], 0, ',', '.') ?></td>
-                                <td class="text-center">
-                                  <div class="btn-group btn-group-sm" role="group">
-                                    <button type="button" class="btn btn-warning" onclick="edit_menu_harian(<?= $menu['id_menu_harian'] ?>)" title="Edit">
-                                      <i class="fas fa-edit"></i>
-                                    </button>
-                                    <button type="button" class="btn btn-danger" onclick="hapus_menu_harian(<?= $menu['id_menu_harian'] ?>)" title="Hapus">
-                                      <i class="fas fa-trash"></i>
-                                    </button>
-                                  </div>
-                                </td>
-                              </tr>
-                            <?php endforeach; ?>
-                          <?php endif; ?>
+                          <!-- Data akan diisi oleh V_Menu_Harian_js.php -->
                         </tbody>
                       </table>
                     </div>
@@ -120,18 +99,15 @@
   <?php $this->load->view('back/menu_harian/V_Menu_Harian_form'); ?>
 
   <!-- JAVASCRIPT -->
+  <!-- jQuery harus di-load PALING ATAS sebelum JS lain -->
   <script src="<?php echo base_url('assets_back/libs/jquery/jquery.min.js'); ?>"></script>
+  <!-- Bootstrap JS jika dipakai -->
   <script src="<?php echo base_url('assets_back/libs/bootstrap/js/bootstrap.bundle.min.js'); ?>"></script>
-  <script src="<?php echo base_url('assets_back/libs/metismenu/metisMenu.min.js'); ?>"></script>
-  <script src="<?php echo base_url('assets_back/libs/simplebar/simplebar.min.js'); ?>"></script>
-  <script src="<?php echo base_url('assets_back/libs/node-waves/waves.min.js'); ?>"></script>
-  <script src="<?php echo base_url('assets_back/libs/datatables.net/js/jquery.dataTables.min.js'); ?>"></script>
-  <script src="<?php echo base_url('assets_back/libs/datatables.net-bs4/js/dataTables.bootstrap4.min.js'); ?>"></script>
-  <script src="<?php echo base_url('assets_back/libs/datatables.net-responsive/js/dataTables.responsive.min.js'); ?>"></script>
-  <script src="<?php echo base_url('assets_back/libs/datatables.net-responsive-bs4/js/responsive.bootstrap4.min.js'); ?>"></script>
-  <script src="<?php echo base_url('assets_back/libs/sweetalert2/sweetalert2.min.js'); ?>"></script>
-  <script src="<?php echo base_url('assets_back/js/app.js'); ?>"></script>
-  <?php $this->load->view('back/menu_harian/V_Menu_Harian_js'); ?>
+  <!-- Select2 JS jika dipakai -->
+  <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+  <!-- Custom JS Anda (static asset) -->
+  <script src="<?php echo base_url('assets_back/js/menu_harian.js'); ?>"></script>
+
 </body>
 
 </html>

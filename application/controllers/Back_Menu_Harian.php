@@ -6,88 +6,208 @@ class Back_Menu_Harian extends CI_Controller
   public function __construct()
   {
     parent::__construct();
+    // Pastikan nama model sudah benar 'M_Menu_Harian'
     $this->load->model('M_Menu_Harian');
     $this->load->library('form_validation');
   }
 
+  /**
+   * Menampilkan halaman utama (HTML)
+   */
   public function index()
+  {
+    if ($this->input->is_ajax_request()) {
+      // Panggil ajax_list untuk mengambil data
+      $this->ajax_list();
+    } else {
+      $this->load->view('back/menu_harian/V_Menu_Harian');
+    }
+  }
+
+  /**
+   * Mengambil data untuk DataTables (AJAX)
+   */
+  public function ajax_list()
   {
     $filter = [
       'shift' => $this->input->get('shift'),
       'tanggal' => $this->input->get('tanggal'),
       'id_customer' => $this->input->get('id_customer')
     ];
-    $data['menu_harian'] = $this->M_Menu_Harian->get_all($filter);
-    $this->load->view('back/menu_harian/V_Menu_Harian', $data);
+
+    // Panggil method model yang sudah di-JOIN
+    $list = $this->M_Menu_Harian->get_all($filter);
+
+    // Kembalikan sebagai JSON yang diharapkan oleh JavaScript
+    echo json_encode(['show_data' => $list]);
   }
 
+  /**
+   * Menyimpan data baru atau update (AJAX)
+   */
   public function save()
   {
     $data = $this->input->post();
-    $kondimen = json_decode($this->input->post('kondimen'), true);
+    $id_menu_harian = !empty($data['id_menu_harian']) ? $data['id_menu_harian'] : null;
+    $kondimen = json_decode($data['kondimen'], true);
+    unset($data['kondimen']);
+    unset($data['id_menu_harian']);
 
-    // Debug: log data yang diterima
-    log_message('error', 'POST DATA: ' . print_r($data, true));
-    log_message('error', 'KONDIMEN: ' . print_r($kondimen, true));
+    // id_kantin may be an array (multiple selected kantins) or a single value
+    $selected_kantins = [];
+    if (isset($data['id_kantin'])) {
+      if (is_array($data['id_kantin'])) $selected_kantins = $data['id_kantin'];
+      else $selected_kantins = [$data['id_kantin']];
+    }
+    // Remove from $data so model->insert receives clean scalar fields
+    unset($data['id_kantin']);
 
-    // Validasi data
-    if (!$data['tanggal'] || !$data['shift'] || !$data['id_customer'] || !$data['id_kantin'] || !$data['nama_menu'] || !$data['jenis_menu'] || !$data['total_menu_perkantin']) {
-      echo json_encode(['status' => 'error', 'msg' => 'Data wajib diisi!']);
+    // Validasi kondimen tidak kosong
+    if (empty($kondimen) || count($kondimen) == 0) {
+      echo json_encode(['status' => 'error', 'msg' => 'Menu kondimen wajib diisi!']);
       return;
     }
 
-    // Simpan menu_harian
-    $menu_id = $this->M_Menu_Harian->insert($data);
-
-    // Simpan kondimen
-    if ($menu_id && !empty($kondimen)) {
-      foreach ($kondimen as $row) {
-        $this->M_Menu_Harian->insert_kondimen([
-          'id_menu_harian' => $menu_id,
-          'nama_kondimen' => $row['nama'],
-          'qty_kondimen' => $row['qty']
-        ]);
+    // If updating: remove existing record(s) and re-insert per selected kantin
+    if ($id_menu_harian) {
+      // Remove original menu_harian and its kondimen (we will re-create entries per selected kantin)
+      try {
+        $this->M_Menu_Harian->delete($id_menu_harian);
+      } catch (Exception $e) {
+        // continue, we'll attempt re-insert
+        log_message('error', 'Error deleting old menu_harian before update: ' . $e->getMessage());
       }
     }
 
-    echo json_encode(['status' => 'success']);
+    // Now insert one menu_harian per selected kantin
+    if (empty($selected_kantins)) {
+      echo json_encode(['status' => 'error', 'msg' => 'Pilih minimal 1 kantin']);
+      return;
+    }
+
+    $inserted = [];
+    foreach ($selected_kantins as $id_kantin) {
+      $menuData = $data;
+      $menuData['id_kantin'] = $id_kantin;
+      $new_id = $this->M_Menu_Harian->insert($menuData);
+      if ($new_id) {
+        // insert kondimen for this kantin
+        foreach ($kondimen as $k) {
+          $menu = $this->db->select('menu_nama')->where('id_komponen', $k['id_komponen'])->get('menu')->row();
+          $nama_kondimen = $menu ? $menu->menu_nama : '';
+          // qty_per_kantin expected as associative array { id_kantin: qty }
+          $qty = 0;
+          if (!empty($k['qty_per_kantin']) && isset($k['qty_per_kantin'][$id_kantin])) {
+            $qty = $k['qty_per_kantin'][$id_kantin];
+          }
+          $this->db->insert('menu_harian_kondimen', [
+            'id_menu_harian' => $new_id,
+            'id_komponen'    => $k['id_komponen'],
+            'nama_kondimen'  => $nama_kondimen,
+            'kategori_kondimen' => $k['kategori'],
+            'qty_kondimen'   => $qty
+          ]);
+        }
+        $inserted[] = $new_id;
+      }
+    }
+
+    if (!empty($inserted)) {
+      echo json_encode(['status' => 'success', 'msg' => 'Menu harian berhasil disimpan']);
+    } else {
+      echo json_encode(['status' => 'error', 'msg' => 'Gagal menyimpan data']);
+    }
   }
 
+  /**
+   * Menghapus data (AJAX)
+   */
   public function delete($id)
   {
-    $this->M_Menu_Harian->delete($id);
-    echo json_encode(['status' => 'success']);
+    if (empty($id)) {
+      echo json_encode(['status' => 'error', 'msg' => 'ID tidak valid']);
+      return;
+    }
+
+    try {
+      $this->M_Menu_Harian->delete($id);
+      echo json_encode(['status' => 'success', 'message' => 'Data berhasil dihapus']);
+    } catch (Exception $e) {
+      log_message('error', 'Error delete menu harian: ' . $e->getMessage());
+      echo json_encode(['status' => 'error', 'msg' => 'Gagal menghapus data.']);
+    }
   }
 
+  /**
+   * Mengambil data customer (AJAX)
+   */
   public function get_customers()
   {
     $data = $this->db->get('customer')->result_array();
     echo json_encode($data);
   }
 
+  /**
+   * Mengambil data kantin (AJAX)
+   */
   public function get_kantins()
   {
     $data = $this->db->get('kantin')->result_array();
     echo json_encode($data);
   }
 
+  /**
+   * Mengambil data menu/komponen (AJAX)
+   */
   public function get_menu_list()
   {
+    // Sesuaikan nama tabel dan kolom jika berbeda
     $data = $this->db->select('id_komponen, menu_nama')->get('menu')->result_array();
+    $this->db->from('menu');
+    $this->db->where('status_aktif', 1); // Hanya menu aktif
+    $data = $this->db->get()->result_array();
     echo json_encode($data);
   }
-}
 
-// AJAX
-function get_kantins()
-{
-  $data = $this->db->get('kantin')->result_array();
-  echo json_encode($data);
-}
+  public function get_kategori_by_menu()
+  {
+    $id_komponen = $this->input->post('id_komponen');
+    if (!$id_komponen) {
+      echo json_encode(['nama_kategori' => '']);
+      return;
+    }
+    $this->db->select('km.nama_kategori');
+    $this->db->from('menu m');
+    $this->db->join('kategori_menu km', 'm.id_kategori = km.id_kategori');
+    $this->db->where('m.id_komponen', $id_komponen);
+    $result = $this->db->get()->row();
+    echo json_encode(['nama_kategori' => $result ? $result->nama_kategori : '']);
+  }
 
-// AJAX
-function get_customers()
-{
-  $data = $this->db->get('customer')->result_array();
-  echo json_encode($data);
+  public function get_by_id($id)
+  {
+    if (empty($id)) {
+      echo json_encode(['status' => 'error', 'msg' => 'ID tidak valid']);
+      return;
+    }
+
+    // Ambil data menu harian
+    $menu = $this->M_Menu_Harian->get_by_id($id);
+
+    // Ambil data kondimen terkait
+    $kondimen = $this->M_Menu_Harian->get_all_kondimen($id);
+
+    if ($menu) {
+      echo json_encode(['status' => 'success', 'data' => $menu, 'kondimen' => $kondimen]);
+    } else {
+      echo json_encode(['status' => 'error', 'msg' => 'Data tidak ditemukan']);
+    }
+  }
+
+  public function get_kantin_by_customer()
+  {
+    $id_customer = $this->input->post('id_customer');
+    $kantin = $this->db->get_where('kantin', ['id_customer' => $id_customer])->result_array();
+    echo json_encode($kantin);
+  }
 }

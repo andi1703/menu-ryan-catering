@@ -151,6 +151,11 @@ $route['menu-harian/delete/(:num)'] = 'Back_Menu_Harian/delete/$1';
 $route['menu-harian/get_by_id/(:num)'] = 'Back_Menu_Harian/get_by_id/$1';
 $route['menu-harian/get_customers'] = 'Back_Menu_Harian/get_customers';
 $route['menu-harian/get_kantins'] = 'Back_Menu_Harian/get_kantins';
+$route['menu-harian/get_menu_list'] = 'Back_Menu_Harian/get_menu_list';
+$route['menu-harian/ajax_list'] = 'Back_Menu_Harian/ajax_list';
+
+// menu harian report
+$route['menu-harian-report'] = 'Back_Menu_Harian_Report/index';
 
 // ===== DASHBOARD =====
 $route['dashboard'] = 'back_dashboard/index';

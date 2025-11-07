@@ -614,16 +614,14 @@
             }
           });
 
-          <
+
           /div> < /
           div >
             <?php $this->load->view('back_partial/footer'); ?> <
             /div> < /
           div >
 
-            <
-            !--JAVASCRIPT-- >
-            <
+
             script src = "<?php echo base_url('assets_back/libs/jquery/jquery.min.js'); ?>" >
         </script>
         <script src="<?php echo base_url('assets_back/libs/bootstrap/js/bootstrap.bundle.min.js'); ?>"></script>

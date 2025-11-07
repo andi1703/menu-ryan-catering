@@ -68,7 +68,7 @@ class Back_Bahan extends CI_Controller
         return;
       }
 
-      $data = $this->M_Bahan->get_by_id($id);
+      $data = $this->M_Bahan->get_bahan_by_id($id);
 
       if ($data) {
         echo json_encode([
@@ -129,7 +129,7 @@ class Back_Bahan extends CI_Controller
 
       if ($stat === 'add') {
         // Check duplicate name
-        if ($this->M_Bahan->checkDuplicateName($nama_bahan)) {
+        if ($this->M_Bahan->check_bahan_exists($nama_bahan)) {
           echo json_encode([
             'status' => 'error',
             'message' => 'Nama bahan sudah ada, gunakan nama yang lain'
@@ -137,11 +137,11 @@ class Back_Bahan extends CI_Controller
           return;
         }
 
-        $result = $this->M_Bahan->addBahan($data);
+        $result = $this->M_Bahan->insert_bahan($data);
         $message = 'Data bahan berhasil ditambahkan';
       } else if ($stat === 'edit') {
         // Check if data exists
-        $existing = $this->M_Bahan->get_by_id($id);
+        $existing = $this->M_Bahan->get_bahan_by_id($id);
         if (!$existing) {
           echo json_encode([
             'status' => 'error',
@@ -151,7 +151,7 @@ class Back_Bahan extends CI_Controller
         }
 
         // Check duplicate name (exclude current record)
-        if ($this->M_Bahan->checkDuplicateName($nama_bahan, $id)) {
+        if ($this->M_Bahan->check_bahan_exists($nama_bahan, $id)) {
           echo json_encode([
             'status' => 'error',
             'message' => 'Nama bahan sudah ada, gunakan nama yang lain'
@@ -159,7 +159,7 @@ class Back_Bahan extends CI_Controller
           return;
         }
 
-        $result = $this->M_Bahan->updateBahan($id, $data);
+        $result = $this->M_Bahan->update_bahan($id, $data);
         $message = 'Data bahan berhasil diupdate';
       } else {
         echo json_encode([
@@ -215,7 +215,7 @@ class Back_Bahan extends CI_Controller
       $id = intval($id);
 
       // Cek apakah bahan dengan ID tersebut exists
-      $existing = $this->M_Bahan->get_by_id($id);
+      $existing = $this->M_Bahan->get_bahan_by_id($id);
       if (!$existing) {
         echo json_encode([
           'status' => 'error',
@@ -227,7 +227,7 @@ class Back_Bahan extends CI_Controller
       $nama_bahan = $existing['nama_bahan'];
 
       // Hapus data
-      $delete_result = $this->M_Bahan->deleteBahan($id);
+      $delete_result = $this->M_Bahan->delete_bahan($id);
 
       if ($delete_result) {
         echo json_encode([
