@@ -156,6 +156,7 @@ $route['menu-harian/ajax_list'] = 'Back_Menu_Harian/ajax_list';
 
 // menu harian report
 $route['menu-harian-report'] = 'Back_Menu_Harian_Report/index';
+$route['menu-harian-report/generate_pdf'] = 'Back_Menu_Harian_Report/generate_pdf';
 
 // ===== DASHBOARD =====
 $route['dashboard'] = 'back_dashboard/index';
