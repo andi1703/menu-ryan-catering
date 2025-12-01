@@ -26,7 +26,6 @@
                 <input type="date" class="form-control" name="tanggal" id="tanggal" required>
               </div>
             </div>
-
             <div class="col-md-4">
               <div class="form-group mb-3">
                 <label for="shift">Shift <span class="text-danger">*</span></label>
@@ -38,7 +37,6 @@
                 </select>
               </div>
             </div>
-
             <div class="col-md-4">
               <div class="form-group mb-3">
                 <label for="jenis_menu">Jenis Menu <span class="text-danger">*</span></label>
@@ -52,7 +50,7 @@
               </div>
             </div>
 
-            <div class="col-md-6">
+            <div class="col-md-4">
               <div class="form-group mb-3">
                 <label for="id_customer">Customer <span class="text-danger">*</span></label>
                 <select class="form-control" name="id_customer" id="id_customer" required>
@@ -61,9 +59,7 @@
                 </select>
               </div>
             </div>
-
-            <!-- ✅ DROPDOWN KANTIN DENGAN CHECKBOX -->
-            <div class="col-md-6">
+            <div class="col-md-4">
               <div class="form-group mb-3">
                 <label for="kantin-dropdown">Kantin <span class="text-danger">*</span></label>
                 <div class="dropdown w-100">
@@ -72,13 +68,10 @@
                     <i class="mdi mdi-chevron-down"></i>
                   </button>
                   <div class="dropdown-menu w-100 p-3" aria-labelledby="kantin-dropdown" style="max-height: 300px; overflow-y: auto;">
-                    <!-- Header: Select/Deselect All -->
                     <div class="mb-2 pb-2 border-bottom">
                       <a href="#" id="selectAllKantin" class="text-primary me-2" style="font-size: 12px;">Pilih Semua</a> |
                       <a href="#" id="deselectAllKantin" class="text-danger ms-2" style="font-size: 12px;">Hapus Semua</a>
                     </div>
-
-                    <!-- Checkbox List -->
                     <div id="kantin-checkbox-group">
                       <!-- Akan diisi oleh JavaScript -->
                     </div>
@@ -86,11 +79,17 @@
                 </div>
               </div>
             </div>
-
-            <div class="col-md-12">
+            <div class="col-md-4">
               <div class="form-group mb-3">
                 <label for="nama_menu">Nama Menu <span class="text-danger">*</span></label>
                 <input type="text" class="form-control" name="nama_menu" id="nama_menu" required placeholder="Masukkan nama menu utama">
+              </div>
+            </div>
+
+            <div class="col-md-12">
+              <div class="form-group mb-3">
+                <label for="remark" class="form-label">Catatan / Remark</label>
+                <textarea id="remark" name="remark" class="form-control" placeholder="Catatan menu (opsional)"></textarea>
               </div>
             </div>
           </div>

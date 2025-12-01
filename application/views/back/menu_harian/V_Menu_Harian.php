@@ -326,6 +326,9 @@
     }
 
     /* Aksi */
+    #menu-harian-table th:nth-child(11) {
+      width: 10%;
+    }
 
     /* =============================================
        KANTIN & SHIFT BADGES - SMALLER
@@ -471,6 +474,16 @@
       max-height: 50px;
       /* ✅ BATAS TINGGI MAKSIMAL */
     }
+
+    /* Agar teks remark wrap dan tidak overflow */
+    #menu-harian-table th.remark-cell,
+    #menu-harian-table td.remark-cell {
+      white-space: pre-line;
+      word-break: break-word;
+      min-width: 120px;
+      width: 20vw;
+      max-width: 0vw;
+    }
   </style>
 </head>
 
@@ -540,12 +553,13 @@
                             <th class="text-center" width="3%">No</th>
                             <th width="8%">Tanggal</th>
                             <th class="text-center" width="6%">Shift</th>
-                            <th width="12%">Customer</th>
-                            <th width="10%">Kantin</th>
-                            <th class="text-center" width="8%">Jenis Menu</th>
-                            <th width="12%">Nama Menu</th>
-                            <th width="30%">Kondimen Menu</th>
-                            <th class="text-center" width="7%">Total Order</th>
+                            <th width="10%">Customer</th>
+                            <th width="8%">Kantin</th>
+                            <th class="text-center" width="7%">Jenis Menu</th>
+                            <th width="10%">Nama Menu</th>
+                            <th width="18%">Kondimen Menu</th>
+                            <th class="text-center" width="5%">Total Order</th>
+                            <th class="text-center remark-cell" width="22%">Remark</th>
                             <th class="text-center" width="4%">Aksi</th>
                           </tr>
                         </thead>
@@ -571,11 +585,12 @@
   <!-- JAVASCRIPT -->
   <script src="<?php echo base_url('assets_back/libs/jquery/jquery.min.js'); ?>"></script>
   <script src="<?php echo base_url('assets_back/libs/bootstrap/js/bootstrap.bundle.min.js'); ?>"></script>
+  <script src="<?php echo base_url('assets_back/libs/metismenu/metisMenu.min.js'); ?>"></script>
   <script src="<?php echo base_url('assets_back/libs/sweetalert2/sweetalert2.min.js'); ?>"></script>
   <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
   <script src="<?php echo base_url('assets_back/libs/datatables.net/js/jquery.dataTables.min.js'); ?>"></script>
   <script src="<?php echo base_url('assets_back/libs/datatables.net-bs4/js/dataTables.bootstrap4.min.js'); ?>"></script>
-
+  <script src="<?php echo base_url('assets_back/js/app.js'); ?>"></script>
   <?php $this->load->view('back/menu_harian/V_Menu_Harian_js'); ?>
 
 </body>

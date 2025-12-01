@@ -199,24 +199,69 @@
         }
 
         var badgeConfig = {
-          "nasi": { class: "badge-nasi", color: "#ffc107" },
-          "lauk utama": { class: "badge-lauk-utama", color: "#dc3545" },
-          "lauk_utama": { class: "badge-lauk-utama", color: "#dc3545" },
-          "pendamping basah": { class: "badge-pendamping-basah", color: "#28a745" },
-          "pendamping_basah": { class: "badge-pendamping-basah", color: "#28a745" },
-          "pendamping kering": { class: "badge-pendamping-kering", color: "#17a2b8" },
-          "pendamping_kering": { class: "badge-pendamping-kering", color: "#17a2b8" },
-          "sayuran berkuah": { class: "badge-sayuran-berkuah", color: "#20c997" },
-          "sayuran_berkuah": { class: "badge-sayuran-berkuah", color: "#20c997" },
-          "buah": { class: "badge-buah", color: "#e83e8c" },
-          "sambal": { class: "badge-sambal", color: "#fd7e14" },
-          "tumisan": { class: "badge-tumisan", color: "#6f42c1" },
-          "kerupuk": { class: "badge-pendamping-kering", color: "#17a2b8" },
-          "sayur": { class: "badge-sayuran-berkuah", color: "#20c997" }
+          "nasi": {
+            class: "badge-nasi",
+            color: "#ffc107"
+          },
+          "lauk utama": {
+            class: "badge-lauk-utama",
+            color: "#dc3545"
+          },
+          "lauk_utama": {
+            class: "badge-lauk-utama",
+            color: "#dc3545"
+          },
+          "pendamping basah": {
+            class: "badge-pendamping-basah",
+            color: "#28a745"
+          },
+          "pendamping_basah": {
+            class: "badge-pendamping-basah",
+            color: "#28a745"
+          },
+          "pendamping kering": {
+            class: "badge-pendamping-kering",
+            color: "#17a2b8"
+          },
+          "pendamping_kering": {
+            class: "badge-pendamping-kering",
+            color: "#17a2b8"
+          },
+          "sayuran berkuah": {
+            class: "badge-sayuran-berkuah",
+            color: "#20c997"
+          },
+          "sayuran_berkuah": {
+            class: "badge-sayuran-berkuah",
+            color: "#20c997"
+          },
+          "buah": {
+            class: "badge-buah",
+            color: "#e83e8c"
+          },
+          "sambal": {
+            class: "badge-sambal",
+            color: "#fd7e14"
+          },
+          "tumisan": {
+            class: "badge-tumisan",
+            color: "#6f42c1"
+          },
+          "kerupuk": {
+            class: "badge-pendamping-kering",
+            color: "#17a2b8"
+          },
+          "sayur": {
+            class: "badge-sayuran-berkuah",
+            color: "#20c997"
+          }
         };
 
         var key = kategori.toLowerCase().trim();
-        var config = badgeConfig[key] || { class: "badge-secondary", color: "#6c757d" };
+        var config = badgeConfig[key] || {
+          class: "badge-secondary",
+          color: "#6c757d"
+        };
 
         return `<span class="badge ${config.class}" 
                       style="font-size: 0.6rem; padding: 2px 4px; background-color: ${config.color}; color: white; border-radius: 3px; white-space: nowrap;"
@@ -298,6 +343,7 @@
           <td>${item.nama_menu}</td>
           <td>${nestedKondimen}</td>
           <td class="text-end">${item.total_orderan || '0'}</td>
+          <td class="text-center remark-cell">${item.remark ? item.remark : ''}</td>
           <td class="text-center">
             <div class="btn-group" role="group">
               <button type="button" class="btn btn-warning btn-sm btn-edit-menu-harian" data-id="${firstId}" title="Edit">
@@ -327,7 +373,9 @@
           responsive: true,
           autoWidth: false,
           destroy: true,
-          order: [[1, 'desc']],
+          order: [
+            [1, 'desc']
+          ],
           pageLength: 10,
           language: {
             search: "Cari:",
@@ -335,7 +383,10 @@
             zeroRecords: "Tidak ada data yang ditemukan",
             info: "Menampilkan halaman _PAGE_ dari _PAGES_",
             infoEmpty: "Tidak ada data tersedia",
-            paginate: { next: "Selanjutnya", previous: "Sebelumnya" },
+            paginate: {
+              next: "Selanjutnya",
+              previous: "Sebelumnya"
+            },
           },
         });
       } catch (e) {
@@ -361,7 +412,9 @@
 
     function loadKantinRadioOptions(id_customer, callback) {
       var url = id_customer ? base_url + "/get_kantin_by_customer" : base_url + "/get_kantins";
-      var dataAjax = id_customer ? { id_customer: id_customer } : {};
+      var dataAjax = id_customer ? {
+        id_customer: id_customer
+      } : {};
 
       $.ajax({
         url: url,
@@ -472,11 +525,14 @@
             $("#jenis_menu").val(data.jenis_menu);
             $("#id_customer").val(data.id_customer);
             $("#nama_menu").val(data.nama_menu);
+            $("#remark").val(data.remark || "");
 
             // ✅ PARSE MULTIPLE KANTIN IDS
             var existingKantins = [];
             if (data.id_kantins && Array.isArray(data.id_kantins)) {
-              existingKantins = data.id_kantins.map(function(k){ return k.toString(); });
+              existingKantins = data.id_kantins.map(function(k) {
+                return k.toString();
+              });
             } else if (data.id_kantin) {
               existingKantins = [data.id_kantin.toString()];
             }
@@ -649,14 +705,18 @@
 
       $(".kondimen-nama").each(function() {
         if ($(this).hasClass("select2-hidden-accessible")) {
-          try { $(this).select2("destroy"); } catch (e) {}
+          try {
+            $(this).select2("destroy");
+          } catch (e) {}
         }
       });
 
       $(".kondimen-nama").select2({
         width: "100%",
         dropdownParent: $("#form-modal-menu-harian .modal-content"),
-        dropdownCss: { "z-index": 2100 },
+        dropdownCss: {
+          "z-index": 2100
+        },
       });
 
       $(document).off("change", ".kondimen-nama");
@@ -679,8 +739,9 @@
 
         if (id_komponen) {
           $.post(
-            base_url + "/get_kategori_by_menu",
-            { id_komponen: id_komponen },
+            base_url + "/get_kategori_by_menu", {
+              id_komponen: id_komponen
+            },
             function(data) {
               kondimenList[idx].kategori = data.nama_kategori;
               $('.kondimen-kategori[data-idx="' + idx + '"]').val(data.nama_kategori);
@@ -958,6 +1019,11 @@
           });
         });
       }
+
+      $('#vertical-menu-btn').on('click', function() {
+        $('.vertical-menu').toggleClass('sidebar-collapsed');
+        $('body').toggleClass('sidebar-collapsed');
+      });
     });
 
   })();

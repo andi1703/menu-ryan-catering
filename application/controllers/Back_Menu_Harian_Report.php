@@ -63,16 +63,16 @@ class Back_Menu_Harian_Report extends CI_Controller
           }
 
           // Pivot data per menu
-          $menuKey = $row['menu_kondimen'] . '|' . $row['kategori'];
+          $menuKey = $row['nama_kondimen'] . '|' . $row['kategori'];
           if (!isset($groupedByCustomer[$customerId]['menu_data'][$menuKey])) {
             $groupedByCustomer[$customerId]['menu_data'][$menuKey] = [
-              'menu_kondimen' => $row['menu_kondimen'],
+              'menu_kondimen' => $row['nama_kondimen'],
               'kategori' => $row['kategori'],
               'qty_per_kantin' => []
             ];
           }
 
-          $groupedByCustomer[$customerId]['menu_data'][$menuKey]['qty_per_kantin'][$row['nama_kantin']] = $row['qty'];
+          $groupedByCustomer[$customerId]['menu_data'][$menuKey]['qty_per_kantin'][$row['nama_kantin']] = $row['qty_kondimen'];
         }
       }
 
@@ -115,6 +115,14 @@ class Back_Menu_Harian_Report extends CI_Controller
 
     if (count($result) > 0) {
       foreach ($result as $row) {
+        // Ganti ini:
+        // $row['menu_kondimen']
+        // $row['qty']
+
+        // Jadi:
+        $row['nama_kondimen'];
+        $row['qty_kondimen'];
+
         $kantin_info = $this->db->select('customer.id_customer, customer.nama_customer')
           ->from('kantin')
           ->join('customer', 'kantin.id_customer = customer.id_customer')
@@ -139,16 +147,16 @@ class Back_Menu_Harian_Report extends CI_Controller
             $groupedByCustomer[$customerId]['kantins'][] = $row['nama_kantin'];
           }
 
-          $menuKey = $row['menu_kondimen'] . '|' . $row['kategori'];
+          $menuKey = $row['nama_kondimen'] . '|' . $row['kategori'];
           if (!isset($groupedByCustomer[$customerId]['menu_data'][$menuKey])) {
             $groupedByCustomer[$customerId]['menu_data'][$menuKey] = [
-              'menu_kondimen' => $row['menu_kondimen'],
+              'menu_kondimen' => $row['nama_kondimen'],
               'kategori' => $row['kategori'],
               'qty_per_kantin' => []
             ];
           }
 
-          $groupedByCustomer[$customerId]['menu_data'][$menuKey]['qty_per_kantin'][$row['nama_kantin']] = $row['qty'];
+          $groupedByCustomer[$customerId]['menu_data'][$menuKey]['qty_per_kantin'][$row['nama_kantin']] = $row['qty_kondimen'];
         }
       }
 
