@@ -157,14 +157,16 @@ class M_Menu_Harian extends CI_Model
   public function get_laporan_kondimen($filter = [])
   {
     $this->db->select('
-        m.menu_nama AS nama_kondimen,
-        km.nama_kategori AS kategori,
-        mhk.qty_kondimen,
-        k.nama_kantin,
-        c.nama_customer,
-        mh.shift,
-        mh.tanggal
-    ');
+    mh.nama_menu AS nama_menu,
+    mh.jenis_menu AS jenis_menu,
+    m.menu_nama AS nama_kondimen,
+    km.nama_kategori AS kategori,
+    mhk.qty_kondimen,
+    k.nama_kantin,
+    c.nama_customer,
+    mh.shift,
+    mh.tanggal
+');
     $this->db->from('menu_harian_kondimen mhk');
     $this->db->join('menu_harian mh', 'mhk.id_menu_harian = mh.id_menu_harian', 'left');
     $this->db->join('menu m', 'mhk.id_komponen = m.id_komponen', 'left');

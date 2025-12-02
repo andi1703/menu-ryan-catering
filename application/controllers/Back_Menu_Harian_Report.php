@@ -63,11 +63,13 @@ class Back_Menu_Harian_Report extends CI_Controller
           }
 
           // Pivot data per menu
-          $menuKey = $row['nama_kondimen'] . '|' . $row['kategori'];
+          $menuKey = $row['nama_menu'] . '|' . $row['jenis_menu'] . '|' . $row['nama_kondimen'] . '|' . $row['kategori'];
           if (!isset($groupedByCustomer[$customerId]['menu_data'][$menuKey])) {
             $groupedByCustomer[$customerId]['menu_data'][$menuKey] = [
-              'menu_kondimen' => $row['nama_kondimen'],
-              'kategori' => $row['kategori'],
+              'nama_menu'      => $row['nama_menu'],
+              'jenis_menu'     => $row['jenis_menu'],
+              'menu_kondimen'  => $row['nama_kondimen'],
+              'kategori'       => $row['kategori'],
               'qty_per_kantin' => []
             ];
           }
@@ -147,11 +149,13 @@ class Back_Menu_Harian_Report extends CI_Controller
             $groupedByCustomer[$customerId]['kantins'][] = $row['nama_kantin'];
           }
 
-          $menuKey = $row['nama_kondimen'] . '|' . $row['kategori'];
+          $menuKey = $row['nama_menu'] . '|' . $row['jenis_menu'] . '|' . $row['nama_kondimen'] . '|' . $row['kategori'];
           if (!isset($groupedByCustomer[$customerId]['menu_data'][$menuKey])) {
             $groupedByCustomer[$customerId]['menu_data'][$menuKey] = [
-              'menu_kondimen' => $row['nama_kondimen'],
-              'kategori' => $row['kategori'],
+              'nama_menu'      => $row['nama_menu'],
+              'jenis_menu'     => $row['jenis_menu'],
+              'menu_kondimen'  => $row['nama_kondimen'],
+              'kategori'       => $row['kategori'],
               'qty_per_kantin' => []
             ];
           }

@@ -287,7 +287,7 @@
                   <th class="col-kategori">Kategori</th>`;
 
         kantins.forEach(function(kantin) {
-          nestedTable += `<th class="col-qty-kantin" title="${kantin}">${kantin}</th>`;
+          nestedTable += `<th class="col-qty-kantin" title="Qty ${kantin}">Qty ${kantin}</th>`;
         });
 
         nestedTable += `
@@ -1025,6 +1025,42 @@
         $('body').toggleClass('sidebar-collapsed');
       });
     });
+    // test oerhitungan bahan sayur
+
+    // Toggle detail bahan
+    $(document).on('click', '.btn-detail-bahan', function() {
+      var id = $(this).data('kondimen');
+      $('#detail-bahan-' + id).toggle();
+      // Jika ingin load data bahan via AJAX, panggil di sini
+    });
+
+    // Otomatis hitung hasil pembagian
+    $(document).on('input', '.pembagian-sayur', function() {
+      var $row = $(this).closest('tr');
+      var qtyOrder = parseFloat($row.find('td').eq(3).text()) || 0; // kolom ke-4: Qty Order
+      var pembagian = parseFloat($(this).val()) || 1;
+      var hasil = qtyOrder / pembagian;
+      $row.find('.hasil-pembagian').val(pembagian ? Math.ceil(hasil) : '');
+    });
+
+    function tambahBarisBahan(idKondimen) {
+      var $tbody = $('#tabel-bahan-' + idKondimen + ' tbody');
+      var baris = `
+    <tr>
+      <td><input type="text" class="form-control form-control-sm" placeholder="Nama Bahan"></td>
+      <td><input type="number" class="form-control form-control-sm"></td>
+      <td><input type="text" class="form-control form-control-sm" placeholder="Satuan"></td>
+      <td>
+        <button type="button" class="btn btn-danger btn-sm" onclick="hapusBarisBahan(this)">Hapus</button>
+      </td>
+    </tr>
+  `;
+      $tbody.append(baris);
+    }
+
+    function hapusBarisBahan(btn) {
+      $(btn).closest('tr').remove();
+    }
 
   })();
 </script>

@@ -8,246 +8,187 @@
     @page {
       size: A4 landscape;
       margin: 10mm 8mm;
-      /* Top/Bottom: 12mm, Left/Right: 10mm */
-    }
-
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
     }
 
     body {
       font-family: Arial, sans-serif;
-      font-size: 7.5pt;
-      line-height: 1.2;
+      font-size: 7pt;
     }
 
     .header {
       text-align: center;
-      margin-bottom: 12px;
-      border-bottom: 2px solid #000;
-      padding-bottom: 6px;
+      margin-bottom: 10px;
     }
 
     .header h1 {
-      font-size: 14pt;
-      margin-bottom: 3px;
+      font-size: 11pt;
       font-weight: bold;
+      margin-bottom: 2px;
     }
 
-    /* Container untuk layout horizontal */
+    .header .sub {
+      font-size: 8pt;
+      margin-bottom: 6px;
+    }
+
     .customers-container {
       display: flex;
       flex-wrap: wrap;
-      gap: 15px;
-      /* Perbesar gap dari 10px ke 15px */
-      justify-content: flex-start;
-      /* Ganti dari space-between ke flex-start */
+      gap: 10px;
     }
 
-    .customer-section {
-      flex: 0 0 calc(50% - 8px);
-      /* Kurangi width sedikit untuk spacing */
-      margin-bottom: 12px;
+    .customer-block {
+      flex: 0 0 48%;
+      margin-bottom: 10px;
       page-break-inside: avoid;
     }
 
-    /* Untuk customer dengan banyak kantin (>4), gunakan full width */
-    .customer-section.full-width {
-      flex: 0 0 100%;
+    .customer-title {
+      background: #4472C4;
+      color: #fff;
+      font-weight: bold;
+      padding: 4px 8px;
+      font-size: 8pt;
+      border-radius: 3px 3px 0 0;
     }
 
-    .customer-title {
-      background-color: #4472C4;
-      color: white;
-      padding: 4px 8px;
-      /* Tambah padding */
-      font-size: 8.5pt;
-      font-weight: bold;
-      margin-bottom: 4px;
-      text-align: left;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
+    .menu-title {
+      font-size: 8pt;
+      margin-bottom: 2px;
     }
 
     table {
       width: 100%;
       border-collapse: collapse;
-      margin-bottom: 6px;
-      table-layout: auto;
+      margin-bottom: 0;
+      font-size: 7pt;
     }
 
-    table th {
-      background-color: #D9E1F2;
+    th,
+    td {
       border: 1px solid #333;
-      padding: 4px 5px;
-      /* Tambah padding */
-      font-size: 7.5pt;
-      font-weight: bold;
+      padding: 2px 4px;
       text-align: center;
-      word-wrap: break-word;
-      vertical-align: middle;
     }
 
-    table td {
-      border: 1px solid #666;
-      padding: 3px 5px;
-      /* Tambah padding */
-      font-size: 7.5pt;
-      text-align: center;
-      word-wrap: break-word;
-      vertical-align: middle;
-    }
-
-    table td:first-child {
-      text-align: left;
-      padding-left: 6px;
-    }
-
-    table td:nth-child(2) {
-      text-align: left;
-      padding-left: 6px;
-    }
-
-    table tbody tr:nth-child(odd) {
-      background-color: #FFFFFF;
-    }
-
-    table tbody tr:nth-child(even) {
-      background-color: #F8F8F8;
-      /* Lebih soft */
-    }
-
-    table tfoot tr {
-      background-color: #FFE699;
+    th {
+      background: #D9E1F2;
       font-weight: bold;
-      font-size: 8pt;
+      color: #222;
+    }
+
+    .total-row {
+      background: #FFE699;
+      font-weight: bold;
+      color: #222;
+    }
+
+    .col-no {
+      width: 18px;
+    }
+
+    .col-menu {
+      text-align: left;
+    }
+
+    .col-nama-menu {
+      text-align: left;
+    }
+
+    .col-jenis-menu {
+      text-align: left;
     }
 
     .no-data {
       text-align: center;
-      padding: 20px;
-      background-color: #fff3cd;
+      padding: 10px;
+      background: #fff3cd;
       border: 1px solid #ffc107;
       color: #856404;
+      margin-bottom: 10px;
     }
 
-    /* Fixed column widths untuk konsistensi */
-    .col-menu {
-      width: 28%;
-      /* Perbesar dari 25% */
-      min-width: 130px;
-    }
-
-    .col-kategori {
-      width: 20%;
-      /* Perbesar dari 18% */
-      min-width: 90px;
-    }
-
-    .col-kantin {
-      width: auto;
-      min-width: 45px;
-      /* Perbesar dari 40px */
-      max-width: 65px;
-    }
-
-    .col-total {
-      width: 12%;
-      /* Perbesar dari 10% */
-      min-width: 55px;
-    }
-
-    /* Tambahan untuk readability */
+    /* Responsive print */
     @media print {
       body {
         -webkit-print-color-adjust: exact;
         print-color-adjust: exact;
+      }
+
+      .customer-block {
+        page-break-inside: avoid;
       }
     }
   </style>
 </head>
 
 <body>
-  <!-- Header -->
   <div class="header">
-    <h1>Daily Menu Report</h1>
+    <h1>MENU HARIAN REPORT</h1>
+    <div class="sub">
+      Shift: <?= isset($shift) ? htmlspecialchars($shift) : '-' ?> &nbsp; | &nbsp;
+      Tanggal: <?= isset($tanggal) ? htmlspecialchars($tanggal) : date('d/m/Y') ?>
+    </div>
   </div>
 
-  <!-- Data per Customer - Layout Horizontal -->
-  <?php if (count($groupedByCustomer) > 0) : ?>
+  <?php if (!empty($groupedByCustomer)) : ?>
     <div class="customers-container">
       <?php foreach ($groupedByCustomer as $customerId => $customerData) : ?>
-        <?php
-        // Hitung jumlah kantin untuk menentukan layout
-        $jumlahKantin = count($customerData['kantins']);
-
-        // Jika kantin > 4, gunakan full width
-        $isFullWidth = $jumlahKantin > 4;
-        ?>
-
-        <div class="customer-section <?= $isFullWidth ? 'full-width' : '' ?>">
-          <!-- Customer Title -->
-          <div class="customer-title" title="<?= htmlspecialchars($customerData['customer_name']) ?>">
+        <div class="customer-block">
+          <div class="customer-title">
             <?= htmlspecialchars($customerData['customer_name']) ?>
           </div>
-
           <table>
             <thead>
               <tr>
-                <th class="col-menu">Menu Kondimen</th>
-                <th class="col-kategori">Kategori</th>
+                <th class="col-no">#</th>
+                <th class="col-nama-menu">Nama Menu</th>
+                <th class="col-jenis-menu">Jenis Menu</th>
+                <th class="col-menu">Kondimen</th>
                 <?php foreach ($customerData['kantins'] as $kantin) : ?>
-                  <th class="col-kantin" title="<?= htmlspecialchars($kantin) ?>">
-                    <?php
-                    // Truncate nama kantin jika terlalu panjang
-                    $displayKantin = $kantin;
-                    if (strlen($kantin) > 10) {
-                      $displayKantin = substr($kantin, 0, 8) . '..';
-                    }
-                    echo htmlspecialchars($displayKantin);
-                    ?>
-                  </th>
+                  <th><?= htmlspecialchars($kantin) ?></th>
                 <?php endforeach; ?>
-                <th class="col-total">Total</th>
+                <th>Total</th>
               </tr>
             </thead>
+            <?php
+            // Hitung rowspan untuk setiap kombinasi nama_menu + jenis_menu
+            $rowspanMap = [];
+            foreach ($customerData['menu_data'] as $menu) {
+              $key = $menu['nama_menu'] . '|' . $menu['jenis_menu'];
+              if (!isset($rowspanMap[$key])) $rowspanMap[$key] = 0;
+              $rowspanMap[$key]++;
+            }
+            ?>
+
             <tbody>
-              <?php if (empty($customerData['menu_data'])) : ?>
-                <tr>
-                  <td colspan="<?= count($customerData['kantins']) + 3 ?>" style="text-align: center; padding: 12px; color: #999;">
-                    Tidak ada data menu
-                  </td>
-                </tr>
-              <?php else : ?>
-                <?php foreach ($customerData['menu_data'] as $menu) : ?>
-                  <tr>
-                    <td title="<?= htmlspecialchars($menu['menu_kondimen']) ?>">
-                      <?= htmlspecialchars($menu['menu_kondimen']) ?>
-                    </td>
-                    <td title="<?= htmlspecialchars($menu['kategori']) ?>">
-                      <?= htmlspecialchars($menu['kategori']) ?>
-                    </td>
-                    <?php foreach ($customerData['kantins'] as $kantin) : ?>
-                      <td>
-                        <?php
-                        $qty = isset($menu['qty_per_kantin'][$kantin]) ? $menu['qty_per_kantin'][$kantin] : 0;
-                        echo $qty;
-                        ?>
-                      </td>
-                    <?php endforeach; ?>
-                    <td><strong><?= $menu['total'] ?></strong></td>
-                  </tr>
-                <?php endforeach; ?>
-              <?php endif; ?>
+              <?php
+              $no = 1;
+              $printed = [];
+              foreach ($customerData['menu_data'] as $menu) :
+                $key = $menu['nama_menu'] . '|' . $menu['jenis_menu'];
+                echo '<tr>';
+                echo '<td>' . $no++ . '</td>';
+                // Merge cell untuk nama_menu dan jenis_menu
+                if (empty($printed[$key])) {
+                  echo '<td rowspan="' . $rowspanMap[$key] . '">' . htmlspecialchars($menu['nama_menu']) . '</td>';
+                  echo '<td rowspan="' . $rowspanMap[$key] . '">' . htmlspecialchars($menu['jenis_menu']) . '</td>';
+                  $printed[$key] = true;
+                }
+                // Kondimen dan qty
+                echo '<td>' . htmlspecialchars($menu['menu_kondimen']) . '</td>';
+                foreach ($customerData['kantins'] as $kantin) {
+                  echo '<td>' . (isset($menu['qty_per_kantin'][$kantin]) ? $menu['qty_per_kantin'][$kantin] : 0) . '</td>';
+                }
+                echo '<td><strong>' . $menu['total'] . '</strong></td>';
+                echo '</tr>';
+              endforeach;
+              ?>
             </tbody>
             <tfoot>
-              <tr>
-                <td colspan="2" style="text-align: right; padding-right: 10px;"><strong>Total</strong></td>
+              <tr class="total-row">
+                <td colspan="4">Total</td>
                 <?php
-                // Total per kantin
                 foreach ($customerData['kantins'] as $kantin) {
                   $totalPerKantin = 0;
                   foreach ($customerData['menu_data'] as $menu) {
@@ -255,15 +196,13 @@
                       $totalPerKantin += $menu['qty_per_kantin'][$kantin];
                     }
                   }
-                  echo "<td style='text-align: center;'><strong>$totalPerKantin</strong></td>";
+                  echo "<td>$totalPerKantin</td>";
                 }
-
-                // Grand total
                 $grandTotal = 0;
                 foreach ($customerData['menu_data'] as $menu) {
                   $grandTotal += $menu['total'];
                 }
-                echo "<td style='text-align: center;'><strong>$grandTotal</strong></td>";
+                echo "<td>$grandTotal</td>";
                 ?>
               </tr>
             </tfoot>
