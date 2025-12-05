@@ -181,6 +181,11 @@
     #deselectAllKantin:hover {
       text-decoration: underline;
     }
+
+    .table th,
+    .table td {
+      vertical-align: middle;
+    }
   </style>
 </head>
 
@@ -364,53 +369,72 @@
                                 <table class="table table-bordered table-sm table-hover">
                                   <thead class="table-primary">
                                     <tr>
-                                      <th>No</th>
-                                      <th>Menu Kondimen</th>
+                                      <th class="text-center" style="width:40px;">No</th>
+                                      <th>Nama Menu</th>
+                                      <th>Jenis Menu</th>
+                                      <th>Kondimen</th>
                                       <th>Kategori</th>
                                       <?php foreach ($customerData['kantins'] as $kantin) : ?>
-                                        <th><?= htmlspecialchars($kantin) ?></th>
+                                        <th class="text-center"><?= htmlspecialchars($kantin) ?></th>
                                       <?php endforeach; ?>
-                                      <th>Total</th>
+                                      <th class="text-center" style="width:60px;">Total</th>
+                                      <th class="text-center" style="background:#ffc; width:80px;">Total Order</th>
                                     </tr>
                                   </thead>
                                   <tbody>
                                     <?php
                                     $menuNo = 1;
                                     foreach ($customerData['menu_data'] as $menu) :
+                                      $kondimenList = isset($menu['kondimen_list']) && is_array($menu['kondimen_list']) ? $menu['kondimen_list'] : [];
+                                      $rowspan = count($kondimenList);
+                                      $first = true;
+                                      $totalOrderLaukUtama = 0;
+                                      foreach ($kondimenList as $kondimen) {
+                                        if (isset($kondimen['kategori']) && strtolower($kondimen['kategori']) == 'lauk utama') {
+                                          $totalOrderLaukUtama += array_sum(array_map('intval', $kondimen['qty_per_kantin'] ?? []));
+                                        }
+                                      }
+                                      foreach ($kondimenList as $kondimen) :
                                     ?>
-                                      <tr>
-                                        <td><?= $menuNo++ ?></td>
-                                        <td><?= htmlspecialchars($menu['menu_kondimen']) ?></td>
-                                        <td><?= htmlspecialchars($menu['kategori']) ?></td>
-                                        <?php foreach ($customerData['kantins'] as $kantin) : ?>
-                                          <td class="text-center">
-                                            <?= isset($menu['qty_per_kantin'][$kantin]) ? $menu['qty_per_kantin'][$kantin] : 0 ?>
-                                          </td>
-                                        <?php endforeach; ?>
-                                        <td class="text-center"><strong><?= $menu['total'] ?></strong></td>
-                                      </tr>
-                                    <?php endforeach; ?>
+                                        <tr>
+                                          <?php if ($first) : ?>
+                                            <td class="text-center align-middle" rowspan="<?= $rowspan ?>"><?= $menuNo++ ?></td>
+                                            <td class="align-middle" rowspan="<?= $rowspan ?>"><?= htmlspecialchars($menu['nama_menu'] ?? '-') ?></td>
+                                            <td class="align-middle" rowspan="<?= $rowspan ?>"><?= htmlspecialchars($menu['jenis_menu'] ?? '-') ?></td>
+                                          <?php endif; ?>
+                                          <td><?= htmlspecialchars($kondimen['nama_kondimen'] ?? '-') ?></td>
+                                          <td><?= htmlspecialchars($kondimen['kategori'] ?? '-') ?></td>
+                                          <?php foreach ($customerData['kantins'] as $kantin) :
+                                            $qtySafe = isset($kondimen['qty_per_kantin'][$kantin]) ? intval($kondimen['qty_per_kantin'][$kantin]) : 0;
+                                          ?>
+                                            <td class="text-center"><?= $qtySafe ?></td>
+                                          <?php endforeach; ?>
+                                          <td class="text-center"><strong><?= array_sum(array_map('intval', $kondimen['qty_per_kantin'] ?? [])) ?></strong></td>
+                                          <?php if ($first) : ?>
+                                            <td class="text-center align-middle" rowspan="<?= $rowspan ?>" style="background:#ffc; color:#222; font-weight:bold;"><?= $totalOrderLaukUtama ?></td>
+                                          <?php endif; ?>
+                                        </tr>
+                                        <?php $first = false; ?>
+                                    <?php endforeach;
+                                    endforeach; ?>
                                   </tbody>
                                   <tfoot class="table-dark">
                                     <tr>
-                                      <th colspan="3">Total</th>
+                                      <th colspan="<?= 6 + count($customerData['kantins']) ?>" class="text-end">Total</th>
                                       <?php
-                                      foreach ($customerData['kantins'] as $kantin) {
-                                        $totalPerKantin = 0;
-                                        foreach ($customerData['menu_data'] as $menu) {
-                                          if (isset($menu['qty_per_kantin'][$kantin])) {
-                                            $totalPerKantin += $menu['qty_per_kantin'][$kantin];
+                                      // Hitung grand total hanya dari kolom Total Order (lauk utama per menu)
+                                      $grandOrder = 0;
+                                      foreach ($customerData['menu_data'] as $menu) {
+                                        $kondimenList = isset($menu['kondimen_list']) && is_array($menu['kondimen_list']) ? $menu['kondimen_list'] : [];
+                                        $totalOrderLaukUtama = 0;
+                                        foreach ($kondimenList as $kondimen) {
+                                          if (isset($kondimen['kategori']) && strtolower($kondimen['kategori']) == 'lauk utama') {
+                                            $totalOrderLaukUtama += array_sum(array_map('intval', $kondimen['qty_per_kantin'] ?? []));
                                           }
                                         }
-                                        echo "<th class='text-center'>$totalPerKantin</th>";
+                                        $grandOrder += $totalOrderLaukUtama;
                                       }
-
-                                      // Grand total
-                                      $grandTotal = 0;
-                                      foreach ($customerData['menu_data'] as $menu) {
-                                        $grandTotal += $menu['total'];
-                                      }
-                                      echo "<th class='text-center'>$grandTotal</th>";
+                                      echo "<th class='text-center' style='background:#ffc; color:#222; font-weight:bold;'>$grandOrder</th>";
                                       ?>
                                     </tr>
                                   </tfoot>
@@ -460,424 +484,6 @@
   <!-- <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script> -->
 
   <script src="<?php echo base_url('assets_back/js/app.js'); ?>"></script>
-
-  <script>
-    $(document).ready(function() {
-      // Inisialisasi DataTable
-      $('#report-daily-menu-table').DataTable({
-        responsive: true,
-        paging: true,
-        searching: true,
-        ordering: true
-      });
-
-      // Inisialisasi Bootstrap Dropdown secara manual
-      var dropdownElementList = [].slice.call(document.querySelectorAll('.dropdown-toggle'))
-      var dropdownList = dropdownElementList.map(function(dropdownToggleEl) {
-        return new bootstrap.Dropdown(dropdownToggleEl, {
-          autoClose: 'outside'
-        })
-      });
-
-      // Mencegah dropdown tertutup saat klik di dalam dropdown
-      $('.dropdown-menu').on('click', function(e) {
-        e.stopPropagation();
-      });
-
-      // Cegah form submit saat enter di dalam dropdown
-      $('.dropdown-menu').on('keydown', function(e) {
-        if (e.keyCode === 13) {
-          e.preventDefault();
-        }
-      });
-
-      // Update text button dropdown saat checkbox berubah
-      function updateKantinDropdownText() {
-        const checkedCount = $('.kantin-checkbox:checked').length;
-        const totalCount = $('.kantin-checkbox').length;
-        const dropdown = $('#kantin-dropdown');
-        const textSpan = $('#kantin-selected-count');
-
-        if (checkedCount === 0) {
-          textSpan.text('- Pilih Kantin -');
-          dropdown.removeClass('has-selection');
-        } else if (checkedCount === totalCount) {
-          textSpan.text(`Semua Kantin (${checkedCount})`);
-          dropdown.addClass('has-selection');
-        } else {
-          textSpan.text(`${checkedCount} Kantin Dipilih`);
-          dropdown.addClass('has-selection');
-        }
-      }
-
-      // Event saat checkbox kantin berubah
-      $('.kantin-checkbox').on('change', function() {
-        updateKantinDropdownText();
-      });
-
-      // Select All Kantin
-      $('#selectAllKantin').on('click', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        $('.kantin-checkbox').prop('checked', true);
-        updateKantinDropdownText();
-      });
-
-      // Deselect All Kantin
-      $('#deselectAllKantin').on('click', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        $('.kantin-checkbox').prop('checked', false);
-        updateKantinDropdownText();
-      });
-
-      // Update text saat halaman dimuat
-      updateKantinDropdownText();
-
-      // Auto scroll ke alert jika ada data tidak ditemukan
-      <?php if (empty($pivot) && ($this->input->get('tanggal') || $this->input->get('id_customer') || $this->input->get('id_kantin') || $this->input->get('shift'))) : ?>
-        if ($('.alert-warning').length > 0) {
-          $('html, body').animate({
-            scrollTop: $('.alert-warning').offset().top - 100
-          }, 500);
-        }
-      <?php endif; ?>
-    });
-  </script>
-
-  <script>
-    function printReport() {
-      // Ambil data yang sudah difilter
-      var tanggal = $('#tanggal').val();
-      var shift = $('#shift-select').val();
-      var customer = $('#customer-select option:selected').text();
-      var customerId = $('#customer-select').val();
-
-      // Validasi minimal filter
-      if (!tanggal) {
-        Swal.fire({
-          icon: 'warning',
-          title: 'Perhatian!',
-          text: 'Silakan pilih tanggal terlebih dahulu',
-          confirmButtonText: 'OK'
-        });
-        return;
-      }
-
-      // Ambil kantin yang dipilih
-      var selectedKantins = [];
-      $('.kantin-checkbox:checked').each(function() {
-        selectedKantins.push($(this).val());
-      });
-
-      if (selectedKantins.length === 0) {
-        Swal.fire({
-          icon: 'warning',
-          title: 'Perhatian!',
-          text: 'Silakan pilih minimal 1 kantin',
-          confirmButtonText: 'OK'
-        });
-        return;
-      }
-
-      // Generate print window
-      var printWindow = window.open('', '_blank');
-      var printContent = generatePrintHTML();
-
-      printWindow.document.write(printContent);
-      printWindow.document.close();
-      printWindow.focus();
-
-      setTimeout(function() {
-        printWindow.print();
-      }, 500);
-    }
-
-    function generatePrintHTML() {
-      var tanggal = $('#tanggal').val();
-      var shift = $('#shift-select').val();
-      var customer = $('#customer-select option:selected').text();
-
-      var html = `
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <title>Laporan Menu Harian - Ryan Catering</title>
-    <style>
-        @page {
-            size: A4 landscape;
-            margin: 8mm;
-        }
-        
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: Arial, sans-serif;
-            font-size: 9px;
-            line-height: 1.3;
-        }
-        
-        .header {
-            text-align: center;
-            margin-bottom: 8px;
-            border-bottom: 2px solid #000;
-            padding-bottom: 5px;
-        }
-        
-        .header h2 {
-            font-size: 14px;
-            margin-bottom: 3px;
-            text-transform: uppercase;
-        }
-        
-        .header .company {
-            font-size: 11px;
-            color: #555;
-            margin-bottom: 5px;
-        }
-        
-        .info-table {
-            width: 100%;
-            margin-bottom: 8px;
-            font-size: 9px;
-        }
-        
-        .info-table td {
-            padding: 2px 5px;
-        }
-        
-        .info-table td:first-child {
-            width: 120px;
-            font-weight: bold;
-        }
-        
-        .customer-section {
-            margin-bottom: 10px;
-            page-break-inside: avoid;
-        }
-        
-        .customer-title {
-            background: #007bff;
-            color: white;
-            padding: 4px 8px;
-            font-weight: bold;
-            font-size: 10px;
-            margin-bottom: 5px;
-        }
-        
-        table.data-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 8px;
-            font-size: 8px;
-        }
-        
-        table.data-table th {
-            background: #4a4a4a;
-            color: white;
-            padding: 4px 3px;
-            border: 1px solid #333;
-            text-align: center;
-            font-size: 8px;
-            font-weight: bold;
-        }
-        
-        table.data-table td {
-            padding: 3px;
-            border: 1px solid #ddd;
-            text-align: center;
-        }
-        
-        table.data-table td:nth-child(2) {
-            text-align: left;
-            padding-left: 5px;
-        }
-        
-        table.data-table td:nth-child(3) {
-            text-align: left;
-        }
-        
-        table.data-table tbody tr:nth-child(even) {
-            background: #f9f9f9;
-        }
-        
-        table.data-table tbody tr:hover {
-            background: #f0f0f0;
-        }
-        
-        table.data-table tfoot {
-            background: #333;
-            color: white;
-            font-weight: bold;
-        }
-        
-        table.data-table tfoot td {
-            border-color: #333;
-        }
-        
-        .badge {
-            display: inline-block;
-            padding: 2px 5px;
-            border-radius: 3px;
-            font-size: 7px;
-            font-weight: bold;
-            white-space: nowrap;
-        }
-        
-        .badge-primary { background: #007bff; color: white; }
-        .badge-success { background: #28a745; color: white; }
-        .badge-warning { background: #ffc107; color: black; }
-        .badge-info { background: #17a2b8; color: white; }
-        .badge-danger { background: #dc3545; color: white; }
-        .badge-secondary { background: #6c757d; color: white; }
-        
-        .total-row {
-            background: #fffacd !important;
-            font-weight: bold;
-        }
-        
-        @media print {
-            body { margin: 0; }
-            .customer-section { page-break-inside: avoid; }
-            @page { margin: 8mm; }
-        }
-    </style>
-</head>
-<body>
-    <div class="header">
-        <h2>Laporan Menu Harian</h2>
-        <div class="company">Ryan Catering</div>
-    </div>
-    
-    <table class="info-table">
-        <tr>
-            <td>Tanggal Cetak:</td>
-            <td>${formatDateIndo(new Date())}</td>
-            <td>Tanggal:</td>
-            <td>${formatDateIndo(tanggal)}</td>
-        </tr>
-        <tr>
-            <td>Customer:</td>
-            <td>${customer || 'Semua Customer'}</td>
-            <td>Shift:</td>
-            <td>${shift ? shift.toUpperCase() : 'Semua Shift'}</td>
-        </tr>
-    </table>
-`;
-
-      // Loop untuk setiap customer di accordion
-      $('.accordion-item').each(function() {
-        var customerName = $(this).find('.accordion-button strong').text().trim();
-        var table = $(this).find('table');
-
-        html += `
-    <div class="customer-section">
-        <div class="customer-title">${customerName}</div>
-        <table class="data-table">
-            <thead>
-                <tr>
-`;
-
-        // Copy header
-        table.find('thead th').each(function() {
-          var thText = $(this).text().trim();
-          html += `<th>${thText}</th>`;
-        });
-
-        html += `
-                </tr>
-            </thead>
-            <tbody>
-`;
-
-        // Copy body
-        table.find('tbody tr').each(function() {
-          html += '<tr>';
-          $(this).find('td').each(function(index) {
-            var tdText = $(this).text().trim();
-            if (index === 2) { // Kolom kategori
-              var kategori = tdText;
-              html += `<td>${getKategoriBadgeHTML(kategori)}</td>`;
-            } else {
-              html += `<td>${tdText}</td>`;
-            }
-          });
-          html += '</tr>';
-        });
-
-        html += `
-            </tbody>
-            <tfoot>
-                <tr>
-`;
-
-        // Copy footer
-        table.find('tfoot th').each(function() {
-          var thText = $(this).text().trim();
-          html += `<td>${thText}</td>`;
-        });
-
-        html += `
-                </tr>
-            </tfoot>
-        </table>
-    </div>
-`;
-      });
-
-      html += `
-</body>
-</html>
-`;
-
-      return html;
-    }
-
-    function getKategoriBadgeHTML(kategori) {
-      var badgeClass = 'badge badge-secondary';
-      var kategoriLower = kategori.toLowerCase();
-
-      if (kategoriLower.includes('lauk utama')) {
-        badgeClass = 'badge badge-primary';
-      } else if (kategoriLower.includes('pendamping kering')) {
-        badgeClass = 'badge badge-warning';
-      } else if (kategoriLower.includes('pendamping basah')) {
-        badgeClass = 'badge badge-info';
-      } else if (kategoriLower.includes('sayur')) {
-        badgeClass = 'badge badge-success';
-      } else if (kategoriLower.includes('buah')) {
-        badgeClass = 'badge badge-danger';
-      } else if (kategoriLower.includes('nasi')) {
-        badgeClass = 'badge badge-secondary';
-      }
-
-      return `<span class="${badgeClass}">${kategori}</span>`;
-    }
-
-    function formatDateIndo(date) {
-      if (typeof date === 'string') {
-        var parts = date.split('-');
-        if (parts.length === 3) {
-          date = new Date(parts[0], parts[1] - 1, parts[2]);
-        }
-      }
-
-      var bulan = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
-        'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
-      ];
-
-      var d = date.getDate();
-      var m = date.getMonth();
-      var y = date.getFullYear();
-
-      return d + ' ' + bulan[m] + ' ' + y;
-    }
-  </script>
 </body>
 
 </html>

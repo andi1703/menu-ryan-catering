@@ -84,6 +84,37 @@ class Back_Menu_Harian_Report extends CI_Controller
           $menu['total'] = array_sum($menu['qty_per_kantin']);
         }
       }
+
+      // Setelah proses pivot dan hitung total
+      foreach ($groupedByCustomer as &$customer) {
+        // Group menu kondimen menjadi menu utama dengan kondimen_list
+        $menuGroup = [];
+        $grandTotal = 0; // Tambahkan ini
+        foreach ($customer['menu_data'] as $menu) {
+          $key = $menu['nama_menu'] . '|' . $menu['jenis_menu'];
+          if (!isset($menuGroup[$key])) {
+            $menuGroup[$key] = [
+              'nama_menu' => $menu['nama_menu'],
+              'jenis_menu' => $menu['jenis_menu'],
+              'kondimen_list' => []
+            ];
+          }
+          $menuGroup[$key]['kondimen_list'][] = [
+            'nama_kondimen' => $menu['menu_kondimen'],
+            'kategori' => $menu['kategori'],
+            'qty_per_kantin' => $menu['qty_per_kantin'],
+            'total' => $menu['total']
+          ];
+
+          // Hitung grand total hanya untuk kategori Lauk Utama
+          if (strtolower($menu['kategori']) == 'lauk utama') {
+            $grandTotal += $menu['total'];
+          }
+        }
+        // Replace menu_data dengan hasil group
+        $customer['menu_data'] = array_values($menuGroup);
+        $customer['grand_total_order'] = $grandTotal; // Tambahkan ini
+      }
     }
 
     $data['groupedByCustomer'] = $groupedByCustomer;

@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>MENU HARIAN REPORT</title>
+    <style>
+        @page {
+            size: A4 landscape;
+            margin: 10mm 8mm;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 8pt;
+            color: #222;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .header h1 {
+            font-size: 14pt;
+            font-weight: bold;
+            margin-bottom: 2px;
+        }
+
+        .header .sub {
+            font-size: 9pt;
+            margin-bottom: 8px;
+        }
+
+        /* Container per Customer - Clearfix */
+        .customer-block {
+            width: 100%;
+            margin-bottom: 22px;
+            clear: both;
+            page-break-inside: avoid;
+        }
+
+        .customer-title {
+            background: #007bff;
+            color: #fff;
+            font-weight: bold;
+            padding: 7px 10px;
+            font-size: 11pt;
+            border-radius: 4px 4px 0 0;
+            margin-bottom: 0;
+            letter-spacing: 0.5px;
+            width: 100%;
+            box-sizing: border-box;
+            text-transform: uppercase;
+        }
+
+        /* GRID SYSTEM (Dikonversi ke Float agar support PDF) */
+        .menu-grid-container {
+            width: 100%;
+            padding-top: 10px;
+        }
+
+        .menu-grid-item {
+            background: #fff;
+            border: 1px solid #bbb;
+            border-radius: 6px;
+            box-sizing: border-box;
+            padding: 8px;
+            page-break-inside: avoid;
+            margin-bottom: 15px;
+            
+            /* Logic 2 Kolom */
+            width: 49%; 
+            float: left;
+        }
+
+        /* Jarak antar kolom */
+        .menu-grid-item:nth-child(odd) {
+            margin-right: 2%;
+            clear: left;
+        }
+        .menu-grid-item:nth-child(even) {
+            margin-right: 0;
+        }
+
+        .menu-grid-item table {
+            width: 100%;
+            table-layout: fixed;
+            word-break: break-all;
+        }
+
+        .menu-title {
+            font-weight: bold;
+            font-size: 10pt;
+            text-align: center;
+            margin-bottom: 6px;
+            background: #e9f2fb;
+            border-radius: 4px;
+            padding: 4px 0;
+            text-transform: uppercase;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 8pt;
+            margin-bottom: 0;
+        }
+
+        th, td {
+            border: 1px solid #333;
+            padding: 3px 5px;
+            text-align: center;
+            vertical-align: middle;
+        }
+
+        th {
+            background: #e9f2fb;
+            font-weight: bold;
+            color: #222;
+        }
+
+        /* Kolom Total Order Kuning */
+        .total-order-col {
+            background: #ffe699 !important;
+            color: #222 !important;
+            font-weight: bold;
+        }
+
+        /* Footer Hitam */
+        tfoot tr th, 
+        tfoot tr td.total-row-cell {
+            background: #222 !important;
+            color: #fff !important;
+            font-weight: bold;
+            border-top: 2px solid #222;
+        }
+
+        .text-end { text-align: right; }
+        .text-center { text-align: center; }
+        .text-left { text-align: left; }
+        .align-middle { vertical-align: middle; }
+
+        .no-data {
+            text-align: center;
+            padding: 12px;
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            color: #856404;
+            margin-bottom: 10px;
+            border-radius: 4px;
+        }
+
+        /* Helper Clearfix */
+        .clearfix::after {
+            content: "";
+            clear: both;
+            display: table;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="header">
+        <h1>MENU HARIAN REPORT</h1>
+        <div class="sub">
+            Shift: <strong><?= !empty($filter['shift']) ? strtoupper($filter['shift']) : 'SEMUA' ?></strong> &nbsp; | &nbsp; 
+            Tanggal: <strong><?= !empty($filter['tanggal']) ? date('d/m/Y', strtotime($filter['tanggal'])) : date('d/m/Y') ?></strong>
+        </div>
+    </div>
+
+    <?php if (!empty($groupedByCustomer)) : ?>
+        
+        <?php foreach ($groupedByCustomer as $customerId => $customerData) : ?>
+            
+            <div class="customer-block">
+                <div class="customer-title"><?= htmlspecialchars($customerData['customer_name']) ?></div>
+                
+                <div class="menu-grid-container clearfix">
+                    
+                    <?php 
+                    // 1. GROUPING DATA: Ubah data flat menjadi hierarki Menu -> Kondimen
+                    $menus = [];
+                    foreach ($customerData['menu_data'] as $row) {
+                        $menuKey = $row['nama_menu'] . '_' . $row['jenis_menu'];
+                        if (!isset($menus[$menuKey])) {
+                            $menus[$menuKey] = [
+                                'nama_menu' => $row['nama_menu'],
+                                'jenis_menu' => $row['jenis_menu'],
+                                'items' => []
+                            ];
+                        }
+                        // Tambahkan data kondimen
+                        $menus[$menuKey]['items'][] = $row;
+                    }
+                    
+                    // Reset index array agar CSS nth-child (ganjil/genap) bekerja normal
+                    $menus = array_values($menus);
+                    ?>
+
+                    <?php foreach ($menus as $menu) : 
+                        $kondimenList = $menu['items'];
+                        
+                        // Hitung "Total Order" (Biasanya total dari Lauk Utama)
+                        $totalOrderLaukUtama = 0;
+                        $hasLaukUtama = false;
+                        
+                        foreach ($kondimenList as $kondimen) {
+                            if (isset($kondimen['kategori']) && stripos($kondimen['kategori'], 'lauk utama') !== false) {
+                                $totalOrderLaukUtama += $kondimen['total'];
+                                $hasLaukUtama = true;
+                            }
+                        }
+                        
+                        // Fallback: Jika tidak ada lauk utama, ambil angka terbesar dari kondimen (misal Nasi/Paket)
+                        if (!$hasLaukUtama && count($kondimenList) > 0) {
+                            $maxTotal = 0;
+                            foreach ($kondimenList as $k) {
+                                if($k['total'] > $maxTotal) $maxTotal = $k['total'];
+                            }
+                            $totalOrderLaukUtama = $maxTotal;
+                        }
+                    ?>
+                    
+                    <div class="menu-grid-item">
+                        <div class="menu-title">
+                            <?= htmlspecialchars($menu['nama_menu'] ?? '-') ?> 
+                            <span style="font-weight:normal; font-size: 8pt;">(<?= htmlspecialchars($menu['jenis_menu'] ?? '-') ?>)</span>
+                        </div>
+                        
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th class="text-center" style="width:25px;">No</th>
+                                    <th class="text-left">Kondimen</th>
+                                    
+                                    <!-- Header Kantin -->
+                                    <?php foreach ($customerData['kantins'] as $kantin) : ?>
+                                        <th class="text-center"><?= htmlspecialchars($kantin) ?></th>
+                                    <?php endforeach; ?>
+                                    
+                                    <th class="text-center" style="width:40px;">Total</th>
+                                    <th class="text-center total-order-col" style="width:60px;">Total Order</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php 
+                                $rowNo = 1;
+                                $countKondimen = count($kondimenList);
+                                foreach ($kondimenList as $idx => $kondimen) : 
+                                ?>
+                                <tr>
+                                    <td class="text-center"><?= $rowNo++ ?></td>
+                                    <td class="text-left"><?= htmlspecialchars($kondimen['menu_kondimen'] ?? '-') ?></td>
+                                    
+                                    <!-- Qty per Kantin -->
+                                    <?php foreach ($customerData['kantins'] as $kantin) : 
+                                        $qtySafe = isset($kondimen['qty_per_kantin'][$kantin]) ? intval($kondimen['qty_per_kantin'][$kantin]) : 0;
+                                    ?>
+                                        <td class="text-center"><?= ($qtySafe > 0) ? $qtySafe : '' ?></td>
+                                    <?php endforeach; ?>
+                                    
+                                    <!-- Total Baris -->
+                                    <td class="text-center"><strong><?= $kondimen['total'] ?></strong></td>
+                                    
+                                    <!-- Total Order (Merged Cell) -->
+                                    <?php if ($idx === 0) : // Hanya render di baris pertama ?>
+                                        <td class="text-center align-middle total-order-col" rowspan="<?= $countKondimen ?>">
+                                            <?= $totalOrderLaukUtama ?>
+                                        </td>
+                                    <?php endif; ?>
+                                </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <!-- Footer Total -->
+                                    <th colspan="<?= 2 + count($customerData['kantins']) + 1 ?>" class="text-end" style="background:#222; color:#fff;">Total Order Menu</th>
+                                    <th class="text-center total-order-col"><?= $totalOrderLaukUtama ?></th>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                    <?php endforeach; ?>
+                    
+                </div> <!-- End Grid Container -->
+            </div> <!-- End Customer Block -->
+            
+        <?php endforeach; ?>
+
+    <?php else : ?>
+        <div class="no-data">
+            <strong>⚠ Tidak Ada Data</strong><br>
+            Tidak ada data menu harian yang sesuai dengan filter yang dipilih.
+        </div>
+    <?php endif; ?>
+
+</body>
+</html>
+
+
+////////////view ke 2 ok nih /// tapi data array gk muncul
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>MENU HARIAN REPORT</title>
+  <style>
+    @page {
+      size: A4 landscape;
+      margin: 10mm 8mm;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      font-size: 8pt;
+      color: #222;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 10px;
+    }
+
+    .header h1 {
+      font-size: 14pt;
+      font-weight: bold;
+      margin-bottom: 2px;
+    }
+
+    .header .sub {
+      font-size: 9pt;
+      margin-bottom: 8px;
+    }
+
+    /* CONTAINER UTAMA */
+    .report-container {
+      width: 100%;
+      margin-top: 10px;
+    }
+
+    /* GRID CUSTOMER (KIRI - KANAN) */
+    .customer-block {
+      width: 49%;
+      /* Lebar 49% agar muat 2 customer bersebelahan */
+      float: left;
+      margin-bottom: 20px;
+      page-break-inside: avoid;
+    }
+
+    /* Logic Selang-seling Customer */
+    .customer-block:nth-child(odd) {
+      margin-right: 2%;
+      /* Jarak tengah */
+      clear: left;
+      /* Mulai baris baru di kiri */
+    }
+
+    .customer-block:nth-child(even) {
+      margin-right: 0;
+      float: right;
+      /* Paksa ke kanan */
+    }
+
+    .customer-title {
+      font-weight: bold;
+      font-size: 10pt;
+      margin-bottom: 5px;
+      text-transform: uppercase;
+      color: #000;
+      border-bottom: 1px solid #000;
+      padding-bottom: 2px;
+    }
+
+    /* MENU ITEM (Di dalam customer, stack ke bawah) */
+    .menu-grid-item {
+      width: 100%;
+      float: none;
+      margin-bottom: 15px;
+      background: #fff;
+    }
+
+    .menu-title {
+      font-weight: bold;
+      font-size: 9pt;
+      text-align: center;
+      margin-bottom: 4px;
+      background: #e9f2fb;
+      border: 1px solid #999;
+      border-bottom: none;
+      padding: 3px 0;
+      text-transform: uppercase;
+    }
+
+    /* TABEL */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 8pt;
+      margin-bottom: 0;
+      border: 1px solid #000;
+    }
+
+    th,
+    td {
+      border: 1px solid #000;
+      padding: 3px 4px;
+      text-align: center;
+      vertical-align: middle;
+    }
+
+    th {
+      background: #333;
+      /* Header Hitam */
+      color: #fff;
+      font-weight: bold;
+    }
+
+    /* Kolom Total Order Kuning */
+    .total-order-col {
+      background: #ffe699 !important;
+      color: #000 !important;
+      font-weight: bold;
+    }
+
+    /* Footer Tabel */
+    tfoot tr th {
+      background: #ddd !important;
+      color: #000 !important;
+      font-weight: bold;
+      border-top: 2px solid #000;
+    }
+
+    /* Helper Clearfix untuk PDF */
+    .clearfix::after {
+      content: "";
+      clear: both;
+      display: table;
+    }
+
+    .no-data {
+      text-align: center;
+      padding: 20px;
+      border: 1px dashed #ccc;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="header">
+    <h1>MENU HARIAN REPORT</h1>
+    <div class="sub">
+      Shift: <strong><?= !empty($filter['shift']) ? strtoupper($filter['shift']) : 'SEMUA' ?></strong>
+      &nbsp;|&nbsp;
+      Tanggal: <strong><?= !empty($filter['tanggal']) ? date('d/m/Y', strtotime($filter['tanggal'])) : date('d/m/Y') ?></strong>
+    </div>
+  </div>
+
+  <?php if (!empty($groupedByCustomer)) : ?>
+
+    <div class="report-container clearfix">
+
+      <?php foreach ($groupedByCustomer as $customerId => $customerData) : ?>
+
+        <!-- CUSTOMER BLOCK SEBAGAI GRID ITEM (KIRI/KANAN) -->
+        <div class="customer-block">
+          <div class="customer-title">
+            <?= htmlspecialchars($customerData['customer_name']) ?>
+          </div>
+
+          <?php
+          // 1. RE-GROUPING DATA PER MENU
+          $menus = [];
+          if (isset($customerData['menu_data']) && is_array($customerData['menu_data'])) {
+            foreach ($customerData['menu_data'] as $row) {
+              $menuKey = $row['nama_menu'] . '_' . $row['jenis_menu'];
+              if (!isset($menus[$menuKey])) {
+                $menus[$menuKey] = [
+                  'nama_menu' => $row['nama_menu'],
+                  'jenis_menu' => $row['jenis_menu'],
+                  'items' => []
+                ];
+              }
+              $menus[$menuKey]['items'][] = $row;
+            }
+          }
+          $menus = array_values($menus);
+          ?>
+
+          <?php foreach ($menus as $menu) :
+            $kondimenList = $menu['items'];
+
+            // Hitung Total Order (dengan perbaikan Undefined Index)
+            $totalOrderLaukUtama = 0;
+            $hasLaukUtama = false;
+
+            foreach ($kondimenList as $kondimen) {
+              // Gunakan operator ?? 0 untuk mencegah error jika 'total' tidak ada
+              $qtyTotal = isset($kondimen['total']) ? intval($kondimen['total']) : 0;
+
+              if (isset($kondimen['kategori']) && stripos($kondimen['kategori'], 'lauk utama') !== false) {
+                $totalOrderLaukUtama += $qtyTotal;
+                $hasLaukUtama = true;
+              }
+            }
+
+            // Fallback jika tidak ada lauk utama
+            if (!$hasLaukUtama && count($kondimenList) > 0) {
+              $maxTotal = 0;
+              foreach ($kondimenList as $k) {
+                $kTotal = isset($k['total']) ? intval($k['total']) : 0;
+                if ($kTotal > $maxTotal) $maxTotal = $kTotal;
+              }
+              $totalOrderLaukUtama = $maxTotal;
+            }
+          ?>
+
+            <div class="menu-grid-item">
+              <div class="menu-title">
+                <?= htmlspecialchars($menu['nama_menu'] ?? '-') ?>
+                <?php if (!empty($menu['jenis_menu'])) : ?>
+                  <span style="font-weight:normal; font-size: 8pt;">(<?= htmlspecialchars($menu['jenis_menu']) ?>)</span>
+                <?php endif; ?>
+              </div>
+
+              <table>
+                <thead>
+                  <tr>
+                    <th style="width:20px;">#</th>
+                    <th style="text-align: left;">Kondimen</th>
+
+                    <!-- Header Kantin -->
+                    <?php foreach ($customerData['kantins'] as $kantin) : ?>
+                      <th>Qty <?= htmlspecialchars($kantin) ?></th>
+                    <?php endforeach; ?>
+
+                    <th class="total-order-col" style="width:40px;">Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <?php
+                  $rowNo = 1;
+                  $countKondimen = count($kondimenList);
+                  foreach ($kondimenList as $idx => $kondimen) :
+                    // Ambil nilai total aman
+                    $rowTotal = isset($kondimen['total']) ? intval($kondimen['total']) : 0;
+                  ?>
+                    <tr>
+                      <td><?= $rowNo++ ?></td>
+                      <td style="text-align: left;"><?= htmlspecialchars($kondimen['menu_kondimen'] ?? '-') ?></td>
+
+                      <!-- Qty per Kantin -->
+                      <?php foreach ($customerData['kantins'] as $kantin) :
+                        $qtySafe = isset($kondimen['qty_per_kantin'][$kantin]) ? intval($kondimen['qty_per_kantin'][$kantin]) : 0;
+                      ?>
+                        <td><?= ($qtySafe > 0) ? $qtySafe : '' ?></td>
+                      <?php endforeach; ?>
+
+                      <!-- Total Order (Merged Cell) -->
+                      <?php if ($idx === 0) : ?>
+                        <td class="total-order-col" rowspan="<?= $countKondimen ?>" style="vertical-align: middle;">
+                          <?= $totalOrderLaukUtama ?>
+                        </td>
+                      <?php endif; ?>
+                    </tr>
+                  <?php endforeach; ?>
+                </tbody>
+              </table>
+            </div>
+          <?php endforeach; ?>
+
+        </div> <!-- End Customer Block -->
+
+      <?php endforeach; ?>
+
+    </div> <!-- End Report Container -->
+
+  <?php else : ?>
+    <div class="no-data">
+      <strong>⚠ Tidak Ada Data</strong><br>
+      Tidak ada data menu harian yang sesuai dengan filter yang dipilih.
+    </div>
+  <?php endif; ?>
+
+</body>
+
+</html>

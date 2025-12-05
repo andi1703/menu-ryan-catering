@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>MENU HARIAN REPORT</title>
+  <style>
+    /* 1. SETUP KERTAS & FONT */
+    @page {
+      size: A4 landscape;
+      margin: 5mm;
+      /* Margin tipis 5mm */
+    }
+
+    body {
+      font-family: 'Helvetica', Arial, sans-serif;
+      font-size: 7pt;
+      color: #000;
+      line-height: 1.2;
+    }
+
+    /* HEADER LAPORAN */
+    .header {
+      text-align: center;
+      margin-bottom: 8px;
+      border-bottom: 2px solid #000;
+      padding-bottom: 4px;
+    }
+
+    .header h1 {
+      font-size: 13pt;
+      font-weight: bold;
+      margin: 0;
+      text-transform: uppercase;
+    }
+
+    .header .sub {
+      font-size: 8pt;
+      margin-top: 2px;
+    }
+
+    /* === LAYOUT GRID 2 KOLOM (FIXED SPLIT) === */
+    /* Teknik ini menjamin kolom Kanan mulai dari paling atas (Rata Atas) */
+
+    .main-col-left {
+      width: 49.5%;
+      float: left;
+      margin-right: 0.5%;
+    }
+
+    .main-col-right {
+      width: 49.5%;
+      float: left;
+      /* Float left juga agar nempel ke kolom kiri */
+      margin-left: 0.5%;
+    }
+
+    /* CUSTOMER BLOCK */
+    .customer-wrapper {
+      width: 100%;
+      margin-bottom: 12px;
+      /* Hapus page-break-inside: avoid di sini agar customer panjang bisa mengisi sisa kertas */
+      border: 1px solid #000;
+    }
+
+    .customer-title {
+      background-color: #007bff;
+      color: #fff;
+      font-weight: bold;
+      font-size: 9pt;
+      padding: 4px 6px;
+      text-transform: uppercase;
+      border-bottom: 1px solid #000;
+    }
+
+    .customer-body {
+      padding: 4px;
+      background-color: #fff;
+    }
+
+    /* MENU ITEM */
+    .menu-item-box {
+      width: 100%;
+      margin-bottom: 8px;
+      border: 1px solid #999;
+      page-break-inside: avoid;
+      /* Menu tidak boleh terpotong di tengah baris */
+    }
+
+    .menu-item-box:last-child {
+      margin-bottom: 0;
+    }
+
+    .menu-header {
+      background-color: #e9f2fb;
+      border-bottom: 1px solid #999;
+      padding: 2px 4px;
+      text-align: center;
+      font-weight: bold;
+      font-size: 7.5pt;
+      color: #000;
+      text-transform: uppercase;
+    }
+
+    /* TABEL */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 7pt;
+      table-layout: fixed;
+      /* Agar kolom teks membungkus rapi */
+    }
+
+    th,
+    td {
+      border: 1px solid #999;
+      padding: 2px 3px;
+      text-align: center;
+      vertical-align: middle;
+      word-wrap: break-word;
+    }
+
+    th {
+      background-color: #333;
+      color: #fff;
+      font-weight: bold;
+      font-size: 7pt;
+    }
+
+    /* Angka & Total */
+    .val-qty {
+      font-weight: normal;
+      color: #000;
+    }
+
+    .col-total-merged {
+      background-color: #ffe699;
+      color: #000;
+      font-weight: bold;
+      font-size: 8pt;
+    }
+
+    .text-left {
+      text-align: left;
+      padding-left: 4px;
+    }
+
+    /* Utility */
+    .no-data {
+      text-align: center;
+      padding: 20px;
+      border: 1px dashed #ccc;
+      clear: both;
+    }
+
+    .clearfix:after {
+      content: "";
+      display: table;
+      clear: both;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="header">
+    <h1>MENU HARIAN REPORT</h1>
+    <div class="sub">
+      Shift: <strong><?= !empty($filter['shift']) ? strtoupper($filter['shift']) : 'SEMUA' ?></strong>
+      &nbsp;|&nbsp;
+      Tanggal: <strong><?= !empty($filter['tanggal']) ? date('d/m/Y', strtotime($filter['tanggal'])) : date('d/m/Y') ?></strong>
+    </div>
+  </div>
+
+  <?php if (!empty($groupedByCustomer)) : ?>
+
+    <?php
+    // 1. SPLIT DATA MENJADI 2 TUMPUKAN (KIRI & KANAN)
+    // Ini memastikan item Kanan tidak terdorong ke bawah oleh item Kiri
+    $leftColumnData = [];
+    $rightColumnData = [];
+    $counter = 0;
+
+    foreach ($groupedByCustomer as $c) {
+      if ($counter % 2 == 0) {
+        $leftColumnData[] = $c; // Urutan 0, 2, 4... -> Kiri
+      } else {
+        $rightColumnData[] = $c; // Urutan 1, 3, 5... -> Kanan
+      }
+      $counter++;
+    }
+    ?>
+
+    <div class="clearfix">
+
+      <!-- KOLOM KIRI -->
+      <div class="main-col-left">
+        <?php foreach ($leftColumnData as $customerData) : ?>
+          <?php renderCustomerBlockFinal($customerData); ?>
+        <?php endforeach; ?>
+      </div>
+
+      <!-- KOLOM KANAN -->
+      <div class="main-col-right">
+        <?php foreach ($rightColumnData as $customerData) : ?>
+          <?php renderCustomerBlockFinal($customerData); ?>
+        <?php endforeach; ?>
+      </div>
+
+    </div>
+
+  <?php else : ?>
+    <div class="no-data">
+      <strong>⚠ Tidak Ada Data</strong>
+    </div>
+  <?php endif; ?>
+
+</body>
+
+</html>
+
+<?php
+/**
+ * FUNGSI RENDER BLOK CUSTOMER (FINAL)
+ */
+function renderCustomerBlockFinal($customerData)
+{
+?>
+  <div class="customer-wrapper">
+    <div class="customer-title">
+      <?= htmlspecialchars($customerData['customer_name']) ?>
+    </div>
+
+    <div class="customer-body">
+      <?php
+      // 2. GROUPING MENU (Fallback jika controller belum grouping)
+      $menus = [];
+      if (isset($customerData['menu_data']) && is_array($customerData['menu_data'])) {
+        $firstItem = reset($customerData['menu_data']);
+        if (isset($firstItem['kondimen_list'])) {
+          $menus = $customerData['menu_data']; // Sudah group
+        } else {
+          // Manual Grouping
+          foreach ($customerData['menu_data'] as $row) {
+            $menuKey = $row['nama_menu'] . '_' . $row['jenis_menu'];
+            if (!isset($menus[$menuKey])) {
+              $menus[$menuKey] = [
+                'nama_menu' => $row['nama_menu'],
+                'jenis_menu' => $row['jenis_menu'],
+                'kondimen_list' => []
+              ];
+            }
+            // Normalize key nama kondimen
+            $row['menu_kondimen'] = isset($row['menu_kondimen']) ? $row['menu_kondimen'] : (isset($row['nama_kondimen']) ? $row['nama_kondimen'] : '-');
+            $menus[$menuKey]['kondimen_list'][] = $row;
+          }
+          $menus = array_values($menus);
+        }
+      }
+      ?>
+
+      <?php foreach ($menus as $menu) :
+        $kondimenList = isset($menu['kondimen_list']) ? $menu['kondimen_list'] : [];
+        $jenisMenu = isset($menu['jenis_menu']) ? strtolower($menu['jenis_menu']) : '';
+        $isPaket = ($jenisMenu === 'paket');
+
+        // Hitung Total Order Lauk Utama / Max
+        $totalOrderMenu = 0;
+        $foundLaukUtama = false;
+        $representativeItem = null;
+
+        foreach ($kondimenList as $k) {
+          $kQty = isset($k['total']) ? intval($k['total']) : 0;
+          $kat = isset($k['kategori']) ? $k['kategori'] : '';
+          if (stripos($kat, 'lauk utama') !== false) {
+            $totalOrderMenu += $kQty;
+            $foundLaukUtama = true;
+            if (!$representativeItem) $representativeItem = $k;
+          }
+        }
+        if (!$foundLaukUtama && !empty($kondimenList)) {
+          foreach ($kondimenList as $k) {
+            $kQty = isset($k['total']) ? intval($k['total']) : 0;
+            if ($kQty > $totalOrderMenu) {
+              $totalOrderMenu = $kQty;
+              $representativeItem = $k;
+            }
+          }
+        }
+        if (!$representativeItem && !empty($kondimenList)) $representativeItem = $kondimenList[0];
+      ?>
+        <!-- KOTAK MENU -->
+        <div class="menu-item-box">
+          <div class="menu-header">
+            <?= htmlspecialchars($menu['nama_menu'] ?? '-') ?>
+            <?php if (!empty($menu['jenis_menu'])) : ?>
+              <span style="font-weight:normal; font-size: 6.5pt;">(<?= strtoupper($menu['jenis_menu']) ?>)</span>
+            <?php endif; ?>
+          </div>
+
+          <table>
+            <thead>
+              <tr>
+                <th style="width:12px;">#</th>
+                <th class="text-left">Kondimen</th>
+                <?php foreach ($customerData['kantins'] as $kantin) : ?>
+                  <th><?= htmlspecialchars($kantin) ?></th>
+                <?php endforeach; ?>
+                <th style="width:20px;">JML</th>
+                <th class="col-total-merged" style="width:25px;">ORD</th>
+              </tr>
+            </thead>
+            <tbody>
+              <?php if ($isPaket && !empty($kondimenList)) :
+                // === MODE PAKET: SATU BARIS (KOMA) ===
+                $namaKondimenArr = [];
+                foreach ($kondimenList as $k) {
+                  $nama = isset($k['menu_kondimen']) ? $k['menu_kondimen'] : (isset($k['nama_kondimen']) ? $k['nama_kondimen'] : '-');
+                  // Ambil total qty kondimen
+                  $qtyKondimen = isset($k['total']) ? intval($k['total']) : 0;
+
+                  // Format: Nama {qty}
+                  $namaKondimenArr[] = $nama . ' {' . $qtyKondimen . '}';
+                }
+                $kondimenString = implode(', ', $namaKondimenArr);
+              ?>
+                <tr>
+                  <td>1</td>
+                  <td class="text-left" style="font-style: italic; font-size: 6.5pt;"><?= htmlspecialchars($kondimenString) ?></td>
+
+                  <?php foreach ($customerData['kantins'] as $kantin) :
+                    $qtySafe = 0;
+                    if ($representativeItem && isset($representativeItem['qty_per_kantin']) && is_array($representativeItem['qty_per_kantin'])) {
+                      $qtySafe = isset($representativeItem['qty_per_kantin'][$kantin]) ? intval($representativeItem['qty_per_kantin'][$kantin]) : 0;
+                    }
+                  ?>
+                    <td><?= ($qtySafe > 0) ? $qtySafe : '' ?></td>
+                  <?php endforeach; ?>
+
+                  <td style="background-color:#f2f2f2; font-weight:bold;">
+                    <?= $totalOrderMenu > 0 ? $totalOrderMenu : '' ?>
+                  </td>
+                  <td class="col-total-merged">
+                    <?= $totalOrderMenu ?>
+                  </td>
+                </tr>
+
+                <?php else :
+                // === MODE REGULAR: LIST KE BAWAH ===
+                $rowNo = 1;
+                $count = count($kondimenList);
+                if ($count > 0) :
+                  foreach ($kondimenList as $idx => $kondimen) :
+                    $namaKondimen = isset($kondimen['menu_kondimen']) ? $kondimen['menu_kondimen'] : (isset($kondimen['nama_kondimen']) ? $kondimen['nama_kondimen'] : '-');
+                ?>
+                    <tr>
+                      <td><?= $rowNo++ ?></td>
+                      <td class="text-left"><?= htmlspecialchars($namaKondimen) ?></td>
+                      <?php foreach ($customerData['kantins'] as $kantin) :
+                        $qtySafe = 0;
+                        if (isset($kondimen['qty_per_kantin']) && is_array($kondimen['qty_per_kantin'])) {
+                          $qtySafe = isset($kondimen['qty_per_kantin'][$kantin]) ? intval($kondimen['qty_per_kantin'][$kantin]) : 0;
+                        }
+                      ?>
+                        <td><?= ($qtySafe > 0) ? $qtySafe : '' ?></td>
+                      <?php endforeach; ?>
+
+                      <td style="background-color:#f2f2f2; font-weight:bold;">
+                        <?= isset($kondimen['total']) && $kondimen['total'] > 0 ? $kondimen['total'] : '' ?>
+                      </td>
+
+                      <?php if ($idx === 0) : ?>
+                        <td class="col-total-merged" rowspan="<?= $count ?>">
+                          <?= $totalOrderMenu ?>
+                        </td>
+                      <?php endif; ?>
+                    </tr>
+                  <?php endforeach;
+                else : ?>
+                  <tr>
+                    <td colspan="<?= 4 + count($customerData['kantins']) ?>">Empty</td>
+                  </tr>
+              <?php endif;
+              endif; ?>
+            </tbody>
+          </table>
+        </div>
+      <?php endforeach; ?>
+    </div>
+  </div>
+<?php
+}
+?>
