@@ -82,13 +82,9 @@ class M_Menu_Harian extends CI_Model
 
   public function get_by_id($id)
   {
-    $this->db->select('mh.*, c.nama_customer, k.nama_kantin');
-    $this->db->from($this->table . ' mh');
-    $this->db->join('customer c', 'mh.id_customer = c.id_customer', 'left');
-    $this->db->join('kantin k', 'mh.id_kantin = k.id_kantin', 'left');
-    $this->db->where('mh.id_menu_harian', $id);
-
-    return $this->db->get()->row_array();
+    $this->db->where('id_menu_harian', $id);
+    $query = $this->db->get('menu_harian');
+    return $query->row_array();
   }
 
   public function insert($data)
@@ -177,8 +173,26 @@ class M_Menu_Harian extends CI_Model
     if (!empty($filter['tanggal'])) {
       $this->db->where('mh.tanggal', $filter['tanggal']);
     }
+    if (!empty($filter['shift']) && strtoupper($filter['shift']) !== 'SEMUA') {
+      $this->db->where('mh.shift', $filter['shift']);
+    }
     if (!empty($filter['id_customer'])) {
       $this->db->where('mh.id_customer', $filter['id_customer']);
+    }
+    if (!empty($filter['id_kantin'])) {
+      if (is_array($filter['id_kantin'])) {
+        $kantinIds = array_values(array_filter(array_map('intval', $filter['id_kantin']), function ($id) {
+          return $id > 0;
+        }));
+        if (!empty($kantinIds)) {
+          $this->db->where_in('mh.id_kantin', $kantinIds);
+        }
+      } else {
+        $kantinId = (int) $filter['id_kantin'];
+        if ($kantinId > 0) {
+          $this->db->where('mh.id_kantin', $kantinId);
+        }
+      }
     }
     // Tambah filter lain sesuai kebutuhan
 

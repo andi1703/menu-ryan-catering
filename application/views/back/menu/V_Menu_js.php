@@ -8,12 +8,81 @@
     var base_url = $('#base_url').val();
     var dropdownData = {
       categories: [],
-      thematik: [] // Changed from countries to thematik
+      thematik: [],
+      bahanUtama: []
+    };
+
+    // Badge color configuration by category
+    var badgeConfig = {
+      "nasi": {
+        class: "badge-nasi",
+        color: "#ffc107"
+      },
+      "lauk utama": {
+        class: "badge-lauk-utama",
+        color: "#dc3545"
+      },
+      "lauk_utama": {
+        class: "badge-lauk-utama",
+        color: "#dc3545"
+      },
+      "pendamping basah": {
+        class: "badge-pendamping-basah",
+        color: "#28a745"
+      },
+      "pendamping_basah": {
+        class: "badge-pendamping-basah",
+        color: "#28a745"
+      },
+      "pendamping kering": {
+        class: "badge-pendamping-kering",
+        color: "#17a2b8"
+      },
+      "pendamping_kering": {
+        class: "badge-pendamping-kering",
+        color: "#17a2b8"
+      },
+      "sayuran berkuah": {
+        class: "badge-sayuran-berkuah",
+        color: "#20c997"
+      },
+      "sayuran_berkuah": {
+        class: "badge-sayuran-berkuah",
+        color: "#20c997"
+      },
+      "buah": {
+        class: "badge-buah",
+        color: "#e83e8c"
+      },
+      "sambal": {
+        class: "badge-sambal",
+        color: "#fd7e14"
+      },
+      "tumisan": {
+        class: "badge-tumisan",
+        color: "#6f42c1"
+      },
+      "kerupuk": {
+        class: "badge-pendamping-kering",
+        color: "#17a2b8"
+      },
+      "sayur": {
+        class: "badge-sayuran-berkuah",
+        color: "#20c997"
+      }
+    };
+
+    // Custom Multi-Select State
+    var bahanUtamaState = {
+      selected: [],
+      isOpen: false,
+      allOptions: []
     };
 
     $(document).ready(function() {
       loadData();
       loadDropdownData();
+      initBahanUtamaMultiSelect();
 
       // Hitung total harga saat checkbox komponen diubah
       $(document).on('change', '.komponen-checkbox', function() {
@@ -38,7 +107,9 @@
         success: function(result) {
           if (result.status === 'success') {
             dropdownData.categories = result.categories;
-            dropdownData.thematik = result.thematik; // Changed from countries to thematik
+            dropdownData.thematik = result.thematik || [];
+            dropdownData.bahanUtama = result.bahan || [];
+            bahanUtamaState.allOptions = result.bahan || [];
             populateDropdowns();
           }
         }
@@ -52,11 +123,13 @@
       });
       $('#id_kategori').html(categoryOptions);
 
-      var thematikOptions = '<option value="">-- Pilih Thematik --</option>'; // Changed from countryOptions
-      dropdownData.thematik.forEach(function(thematik) { // Changed from countries to thematik
-        thematikOptions += `<option value="${thematik.id_thematik}">${escapeHtml(thematik.thematik_nama)}</option>`; // Changed properties
+      var thematikOptions = '<option value="">-- Pilih Thematik --</option>';
+      dropdownData.thematik.forEach(function(thematik) {
+        thematikOptions += `<option value="${thematik.id_thematik}">${escapeHtml(thematik.thematik_nama)}</option>`;
       });
-      $('#id_thematik').html(thematikOptions); // Changed from id_negara to id_thematik
+      $('#id_thematik').html(thematikOptions);
+
+      renderBahanOptions();
     }
 
     function loadData() {
@@ -88,6 +161,7 @@
       }
 
       $('#show_data_menu').html(html);
+      $('#datatable').show();
 
       // Inisialisasi ulang DataTable
       initDataTable();
@@ -96,63 +170,83 @@
     function buildTableRow(item, no) {
       var imageHtml = item.menu_gambar ?
         `<img src="${base_url}file/products/menu/${item.menu_gambar}" class="img-fluid img-thumbnail" style="width:50px;height:50px;object-fit:cover;cursor:pointer;" alt="Menu Image" onclick="previewImageMenu('${item.menu_gambar}', '${escapeHtml(item.menu_nama)}')">` :
-        '<div class="no-image" style="width: 50px; height: 50px; background: #f8f9fa; border: 1px dashed #dee2e6; display: flex; align-items: center; justify-content: center; border-radius: 4px; font-size: 10px; color: #6c757d;">No Image</div>';
-      var kategori = item.nama_kategori ? escapeHtml(item.nama_kategori) : '<em class="text-muted">Tidak ada kategori</em>'; // Changed from kategori_nama
-      var thematik = item.thematik_nama ? escapeHtml(item.thematik_nama) : '<em class="text-muted">Tidak ada thematik</em>'; // Changed from country_nama to thematik_nama
-      var deskripsi = item.menu_deskripsi ?
-        escapeHtml(item.menu_deskripsi).replace(/\n/g, '<br>') :
-        '<em class="text-muted">Tidak ada deskripsi</em>';
-      var harga = item.menu_harga ? 'Rp ' + parseInt(item.menu_harga).toLocaleString('id-ID') : '<em class="text-muted">-</em>';
+        '<div class="no-image">No Image</div>';
+
+      var kategori = buildCategoryBadge(item.nama_kategori);
+
+      var thematik = item.thematik_nama ?
+        `<span>${escapeHtml(item.thematik_nama)}</span>` :
+        '<span class="text-muted fst-italic">Tidak ada thematik</span>';
+
+      var bahanUtama = '<span class="text-muted fst-italic">Tidak ada bahan utama</span>';
+      if (Array.isArray(item.bahan_utama) && item.bahan_utama.length) {
+        var bahanTextNumbered = item.bahan_utama.map(function(nama, idx) {
+          return (idx + 1) + '. ' + escapeHtml(nama);
+        }).join(', ');
+        bahanUtama = bahanTextNumbered;
+      } else if (item.nama_bahan_utama) {
+        bahanUtama = '1. ' + escapeHtml(item.nama_bahan_utama);
+      }
+
+      // Siapkan konten deskripsi (hanya teks) dan tombol deskripsi untuk kolom Aksi
+      var deskripsi = '<span class="text-muted fst-italic">Tidak ada deskripsi</span>';
+      var deskripsiButtonHtml = '';
+      var escapedName = escapeHtml(item.menu_nama).replace(/'/g, '\\&#039;').replace(/"/g, '&quot;');
+      var imageParam = item.menu_gambar ? encodeURIComponent(item.menu_gambar) : '';
+      var bahanUtamaParam = '';
+      if (Array.isArray(item.bahan_utama) && item.bahan_utama.length > 0) {
+        bahanUtamaParam = encodeURIComponent(JSON.stringify(item.bahan_utama));
+      }
+
+      if (item.menu_deskripsi && item.menu_deskripsi.trim() !== '') {
+        var shortDesc = item.menu_deskripsi.length > 50 ? item.menu_deskripsi.substring(0, 50) + '...' : item.menu_deskripsi;
+        var escapedDesc = escapeHtml(item.menu_deskripsi).replace(/'/g, '\\&#039;').replace(/"/g, '&quot;').replace(/\n/g, '\\n').replace(/\r/g, '\\r');
+
+        deskripsi = `<small class="text-muted">${escapeHtml(shortDesc)}</small>`;
+        deskripsiButtonHtml = `<button type="button" class="btn btn-sm btn-info btn-view-desc" onclick="viewDeskripsi('${item.id_komponen}', '${escapedName}', '${escapedDesc}', '${imageParam}', '${bahanUtamaParam}')" title="Lihat Deskripsi Lengkap"><i class="ri-eye-line"></i></button>`;
+      }
+
       var statusClass = item.status_aktif == 1 ? 'badge bg-success' : 'badge bg-secondary';
       var statusText = item.status_aktif == 1 ? 'Aktif' : 'Tidak Aktif';
       var statusHtml = `<span class="${statusClass}">${statusText}</span>`;
 
 
       return `
-   <tr>
-     <td class="text-center">${no}</td>
-     <td class="text-center">${imageHtml}</td>
-     <td>${escapeHtml(item.menu_nama)}</td>
-     <td>${kategori}</td>
-     <td>${thematik}</td>
-     <td>${deskripsi}</td>
-     <td>${harga}</td>
-     <td class="text-center">${statusHtml}</td>
-     <td class="text-center col-aksi">
-       <div class="table-action-buttons">
-         <button class="btn btn-warning btn-sm btn-edit" data-id="${item.id_komponen}" type="button">
-           <i class="fas fa-edit"></i> Edit
-         </button>
-         <button class="btn btn-danger btn-sm btn-delete" data-id="${item.id_komponen}" type="button">
-           <i class="fas fa-trash"></i> Hapus
-         </button>
-       </div>
-     </td>
-   </tr>
- `;
+        <tr>
+          <td class="text-center fw-bold">${no}</td>
+          <td class="text-center">${imageHtml}</td>
+          <td class="fw-semibold">${escapeHtml(item.menu_nama)}</td>
+          <td>${kategori}</td>
+          <td>${thematik}</td>
+          <td>${bahanUtama}</td>
+          <td>${deskripsi}</td>
+          <td class="text-center">${statusHtml}</td>
+          <td class="text-center">
+            <div class="btn-group btn-group-sm" role="group">
+              ${deskripsiButtonHtml}
+              <button class="btn btn-warning btn-edit" data-id="${item.id_komponen}" type="button" title="Edit">
+                <i class="fas fa-edit"></i>
+              </button>
+              <button class="btn btn-danger btn-delete" data-id="${item.id_komponen}" type="button" title="Hapus">
+                <i class="fas fa-trash"></i>
+              </button>
+            </div>
+          </td>
+        </tr>
+      `;
     }
 
 
     function buildEmptyRow() {
       return `
-     <tr>
-       <td class="text-center">-</td>
-       <td class="text-center">-</td>
-       <td class="text-center">-</td>s
-       <td class="text-center">-</td>
-       <td class="text-center">-</td>
-       <td class="text-center">-</td>
-       <td class="text-center">-</td>
-       <td class="text-center">
-         <div class="text-muted">
-           <i class="fas fa-utensils fa-2x mb-1"></i>
-           <div>Tidak ada data menu</div>
-         </div>
-       </td>
-     </tr>
-   `;
+        <tr>
+          <td colspan="9" class="text-center text-muted py-3">
+            <i class="fas fa-utensils fa-2x mb-2"></i>
+            <div>Tidak ada data menu</div>
+          </td>
+        </tr>
+      `;
     }
-
 
     function initDataTable() {
       if ($.fn.DataTable) {
@@ -179,7 +273,6 @@
       }
     }
 
-
     function escapeHtml(text) {
       var map = {
         '&': '&amp;',
@@ -193,11 +286,213 @@
       }) : '';
     }
 
+    // Build category badge HTML using the config above
+    function buildCategoryBadge(namaKategori) {
+      if (!namaKategori) {
+        return '<span class="text-muted fst-italic">Tidak ada kategori</span>';
+      }
+
+      var key = String(namaKategori).trim().toLowerCase();
+      var keyUnderscore = key.replace(/\s+/g, '_');
+      var cfg = badgeConfig[key] || badgeConfig[keyUnderscore];
+
+      if (cfg) {
+        return `<span class="badge ${cfg.class}" style="background-color:${cfg.color}; color:#fff;">${escapeHtml(namaKategori)}</span>`;
+      }
+      // fallback to default style
+      return `<span class="badge bg-info">${escapeHtml(namaKategori)}</span>`;
+    }
+
+    // ========== CUSTOM MULTI-SELECT FOR BAHAN UTAMA ==========
+    function initBahanUtamaMultiSelect() {
+      const wrapper = $('#bahanUtamaSelect');
+      const selectBox = $('#bahanSelectBox');
+      const dropdownMenu = $('#bahanDropdownMenu');
+      const tagsContainer = $('#bahanTagsContainer');
+      const optionsList = $('#bahanOptionsList');
+      const searchInput = $('#bahanSearchInput');
+      const placeholder = $('#bahanPlaceholder');
+      const clearBtn = $('#bahanClearBtn');
+      const divider = $('.control-divider');
+
+      // Toggle Dropdown
+      selectBox.on('click', function(e) {
+        if ($(e.target).closest('.tag-close').length || $(e.target).closest('#bahanClearBtn').length) {
+          return;
+        }
+        bahanUtamaState.isOpen = !bahanUtamaState.isOpen;
+        updateDropdownState();
+        if (bahanUtamaState.isOpen) {
+          searchInput.focus();
+        }
+      });
+
+      // Close when clicking outside
+      $(document).on('click', function(e) {
+        if (!wrapper[0].contains(e.target)) {
+          bahanUtamaState.isOpen = false;
+          updateDropdownState();
+        }
+      });
+
+      // Search Logic
+      searchInput.on('input', function() {
+        renderBahanOptions($(this).val());
+      });
+
+      // Clear All
+      clearBtn.on('click', function(e) {
+        e.stopPropagation();
+        bahanUtamaState.selected = [];
+        renderBahanTags();
+        renderBahanOptions();
+        updateHiddenInput();
+      });
+
+      function updateDropdownState() {
+        if (bahanUtamaState.isOpen) {
+          dropdownMenu.addClass('show');
+          selectBox.addClass('active');
+        } else {
+          dropdownMenu.removeClass('show');
+          selectBox.removeClass('active');
+          searchInput.val('');
+          renderBahanOptions();
+        }
+      }
+    }
+
+    function renderBahanTags() {
+      const tagsContainer = $('#bahanTagsContainer');
+      const placeholder = $('#bahanPlaceholder');
+      const clearBtn = $('#bahanClearBtn');
+      const divider = $('.control-divider');
+
+      tagsContainer.empty();
+
+      if (bahanUtamaState.selected.length === 0) {
+        tagsContainer.append(placeholder);
+        placeholder.show();
+        clearBtn.hide();
+        divider.hide();
+      } else {
+        placeholder.hide();
+        clearBtn.show();
+        divider.show();
+
+        bahanUtamaState.selected.forEach(function(id) {
+          const item = bahanUtamaState.allOptions.find(b => b.id_bahan == id);
+          if (!item) return;
+
+          const tag = $('<div class=\"tag-badge\"></div>');
+          const closeIcon = $('<i class=\"bi bi-x tag-close\"></i>').on('click', function(e) {
+            e.stopPropagation();
+            removeTag(id);
+          });
+          const span = $('<span></span>').text(item.nama_bahan);
+
+          tag.append(closeIcon).append(span);
+          tagsContainer.append(tag);
+        });
+      }
+      updateHiddenInput();
+    }
+
+    function renderBahanOptions(filterText = '') {
+      const optionsList = $('#bahanOptionsList');
+      optionsList.empty();
+
+      const filtered = bahanUtamaState.allOptions.filter(function(b) {
+        return b.nama_bahan.toLowerCase().includes(filterText.toLowerCase());
+      });
+
+      if (filtered.length === 0) {
+        optionsList.append('<li style=\"padding:10px; color:#666; text-align:center;\">Tidak ada hasil</li>');
+        return;
+      }
+
+      filtered.forEach(function(item) {
+        const isSelected = bahanUtamaState.selected.includes(item.id_bahan);
+        const li = $('<li class=\"option-item\"></li>');
+
+        if (isSelected) {
+          li.addClass('selected');
+        }
+
+        const span = $('<span></span>').text(item.nama_bahan);
+        li.append(span);
+
+        if (isSelected) {
+          li.append('<i class=\"bi bi-check-lg float-end\"></i>');
+        }
+
+        li.on('click', function() {
+          toggleBahanSelection(item.id_bahan);
+        });
+
+        optionsList.append(li);
+      });
+    }
+
+    function toggleBahanSelection(id) {
+      const index = bahanUtamaState.selected.indexOf(id);
+      if (index > -1) {
+        bahanUtamaState.selected.splice(index, 1);
+      } else {
+        bahanUtamaState.selected.push(id);
+      }
+      renderBahanTags();
+      renderBahanOptions($('#bahanSearchInput').val());
+      $('#bahanSearchInput').focus();
+    }
+
+    function removeTag(id) {
+      const index = bahanUtamaState.selected.indexOf(id);
+      if (index > -1) {
+        bahanUtamaState.selected.splice(index, 1);
+      }
+      renderBahanTags();
+      renderBahanOptions();
+    }
+
+    function updateHiddenInput() {
+      $('#id_bahan_utama').val(bahanUtamaState.selected.join(','));
+    }
+
+    function setBahanUtamaValues(values) {
+      bahanUtamaState.selected = values || [];
+      renderBahanTags();
+      renderBahanOptions();
+    }
+
+    function clearBahanUtamaValues() {
+      bahanUtamaState.selected = [];
+      renderBahanTags();
+      renderBahanOptions();
+    }
+
+    function updateBahanPlaceholder() {
+      // No longer needed with custom implementation
+    }
+
 
     // Submit form via AJAX (add/edit)
     $('#form-data').on('submit', function(e) {
       e.preventDefault();
+
+      // Update hidden input before submit
+      updateHiddenInput();
+
       var formData = new FormData(this);
+
+      // Add selected bahan utama to FormData
+      if (bahanUtamaState.selected.length > 0) {
+        formData.delete('id_bahan_utama[]');
+        bahanUtamaState.selected.forEach(function(id) {
+          formData.append('id_bahan_utama[]', id);
+        });
+      }
+
       $('#form-modal-menu-form').find(':focus').blur();
       $.ajax({
         url: '<?= base_url('back_menu/save_data') ?>',
@@ -240,9 +535,9 @@
       $('#id_komponen').val('');
       $('#menu_nama').val('');
       $('#menu_deskripsi').val('');
-      $('#menu_harga').val('');
       $('#id_kategori').val('');
-      $('#id_thematik').val(''); // Changed from id_negara to id_thematik
+      $('#id_thematik').val('');
+      clearBahanUtamaValues();
       $('#status_aktif').val('1');
       $('#menu_gambar').val('');
       $('#image-preview').hide();
@@ -269,9 +564,15 @@
             $('#id_komponen').val(res.data.id_komponen);
             $('#menu_nama').val(res.data.menu_nama);
             $('#menu_deskripsi').val(res.data.menu_deskripsi);
-            $('#menu_harga').val(res.data.menu_harga);
             $('#id_kategori').val(res.data.id_kategori);
-            $('#id_thematik').val(res.data.id_thematik); // Changed from id_negara
+            $('#id_thematik').val(res.data.id_thematik);
+
+            if (res.data.bahan_utama_ids && res.data.bahan_utama_ids.length) {
+              setBahanUtamaValues(res.data.bahan_utama_ids);
+            } else {
+              clearBahanUtamaValues();
+            }
+
             $('#status_aktif').val(res.data.status_aktif);
             $('#id').val(res.data.id_komponen);
             $('#stat').val('edit');
@@ -404,6 +705,68 @@
         }
       });
     }
+
+    // Fungsi untuk view deskripsi dalam modal
+    window.viewDeskripsi = function(idMenu, namaMenu, deskripsi, imageFile, bahanUtama) {
+      // Decode HTML entities dan unescape newlines
+      var tempDiv = document.createElement('div');
+      tempDiv.innerHTML = namaMenu;
+      var decodedName = tempDiv.textContent || tempDiv.innerText || '';
+
+      tempDiv.innerHTML = deskripsi;
+      var decodedDesc = tempDiv.textContent || tempDiv.innerText || '';
+      decodedDesc = decodedDesc.replace(/\\n/g, '\n').replace(/\\r/g, '\r');
+
+      $('#previewMenuName').text(decodedName);
+      $('#previewDeskripsiContent').text(decodedDesc);
+
+      // Handle Bahan Utama (tampilkan sebagai teks dipisah koma)
+      var decodedBahanUtama = bahanUtama ? decodeURIComponent(bahanUtama) : '';
+      if (decodedBahanUtama && decodedBahanUtama !== 'null' && decodedBahanUtama.trim() !== '') {
+        try {
+          var bahanArray = JSON.parse(decodedBahanUtama);
+          if (Array.isArray(bahanArray) && bahanArray.length > 0) {
+            var $container = $('#previewBahanUtama');
+            var $grid = $('<div class="bahan-grid"></div>');
+            for (var i = 0; i < bahanArray.length; i += 5) {
+              var startNum = i + 1;
+              var $list = $('<ol class="mb-0 ps-3 bahan-list" start="' + startNum + '"></ol>');
+              bahanArray.slice(i, i + 5).forEach(function(bahan) {
+                $('<li></li>').text(bahan).appendTo($list);
+              });
+              $grid.append($list);
+            }
+            $container.empty().append($grid);
+            $('#bahanUtamaSection').show();
+          } else {
+            $('#bahanUtamaSection').hide();
+          }
+        } catch (e) {
+          console.error('Error parsing bahan utama:', e);
+          $('#bahanUtamaSection').hide();
+        }
+      } else {
+        $('#bahanUtamaSection').hide();
+      }
+
+      var decodedImage = imageFile ? decodeURIComponent(imageFile) : '';
+      var imagePath = decodedImage ? base_url + 'file/products/menu/' + decodedImage : '';
+      var $imageElement = $('#previewMenuImage');
+      var $placeholder = $('#previewMenuImagePlaceholder');
+
+      if (decodedImage) {
+        $imageElement.attr('src', imagePath);
+        $imageElement.attr('alt', 'Gambar ' + decodedName);
+        $imageElement.show();
+        $placeholder.hide();
+      } else {
+        $imageElement.attr('src', '');
+        $imageElement.hide();
+        $placeholder.show();
+      }
+
+      $('#modalPreviewDeskripsi').modal('show');
+    };
 
 
   })();

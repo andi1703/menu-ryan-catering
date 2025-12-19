@@ -205,7 +205,7 @@
             <div class="col-12">
               <div class="page-title-box d-flex align-items-center justify-content-between">
                 <div>
-                  <h4 class="mb-0 font-size-18">Report Daily Menu</h4>
+                  <h4 class="mb-0 font-size-18">Daily Menu Report</h4>
                   <p class="mb-0 text-muted">Laporan menu harian per kantin</p>
                 </div>
                 <div class="page-title-right">
@@ -222,6 +222,7 @@
           <div class="card mb-3">
             <div class="card-body">
               <form method="get" class="mb-3">
+                <input type="hidden" name="apply_filter" value="1">
                 <div class="row g-2">
                   <!-- Filter Tanggal -->
                   <div class="col-md-3">
@@ -267,14 +268,15 @@
                             ->order_by('nama_kantin', 'ASC')
                             ->get()
                             ->result_array();
-                          $selectedKantins = $this->input->get('id_kantin') ? $this->input->get('id_kantin') : [];
+                          $selectedKantins = isset($filter['id_kantin']) && is_array($filter['id_kantin']) ? $filter['id_kantin'] : [];
+                          $selectedKantinsInt = array_map('intval', $selectedKantins);
 
                           if (count($allKantins) > 0) :
                             foreach ($allKantins as $k) :
-                              $isChecked = in_array($k['nama_kantin'], $selectedKantins) ? 'checked' : '';
+                              $isChecked = in_array((int) $k['id_kantin'], $selectedKantinsInt, true) ? 'checked' : '';
                           ?>
                               <div class="form-check">
-                                <input class="form-check-input kantin-checkbox" type="checkbox" name="id_kantin[]" value="<?= htmlspecialchars($k['nama_kantin']) ?>" id="kantin_<?= $k['id_kantin'] ?>" <?= $isChecked ?>>
+                                <input class="form-check-input kantin-checkbox" type="checkbox" name="id_kantin[]" value="<?= (int) $k['id_kantin'] ?>" id="kantin_<?= $k['id_kantin'] ?>" <?= $isChecked ?>>
                                 <label class="form-check-label" for="kantin_<?= $k['id_kantin'] ?>">
                                   <?= htmlspecialchars($k['nama_kantin']) ?>
                                 </label>
@@ -312,10 +314,9 @@
                     <a href="<?= base_url('menu-harian-report/generate_pdf?' . http_build_query($_GET)) ?>" class="btn btn-danger" target="_blank">
                       <i class="fas fa-file-pdf me-1"></i> Export PDF
                     </a>
-                    <!-- TOMBOL PRINT BARU -->
-                    <button type="button" class="btn btn-info" onclick="printReport()">
-                      <i class="fas fa-print me-1"></i> Print Laporan
-                    </button>
+                    <a href="<?= base_url('menu-harian-report/generate_excel?' . http_build_query($_GET)) ?>" class="btn btn-success" target="_blank">
+                      <i class="fas fa-file-excel me-1"></i> Export Excel
+                    </a>
                   </div>
                 </div>
               </form>
@@ -325,135 +326,160 @@
           <!-- Main Content - Accordion by Customer -->
           <div class="row">
             <div class="col-12">
-              <?php if (count($groupedByCustomer) > 0) : ?>
-                <div class="card">
-                  <div class="card-header">
-                    <div class="row">
-                      <div class="col-lg-6">
-                        <h6 class="mb-0">
-                          Report:
-                          <?php if ($this->input->get('tanggal')) : ?>
-                            <?= date('d M Y', strtotime($this->input->get('tanggal'))) ?>
-                          <?php else : ?>
-                            Semua Tanggal
-                          <?php endif; ?>
-                          <?php if ($this->input->get('shift')) : ?>
-                            - Shift: <?= strtoupper($this->input->get('shift')) ?>
-                          <?php endif; ?>
-                        </h6>
-                      </div>
-                      <div class="col-lg-6">
-                        <div class="custom-control custom-switch float-end">
-                          <input type="checkbox" class="custom-control-input" id="customSwitch1">
-                          <label class="custom-control-label" for="customSwitch1">Show Collapsed</label>
+              <?php if (!empty($hasFilter)) : ?>
+                <?php if (count($groupedByCustomer) > 0) : ?>
+                  <div class="card">
+                    <div class="card-header">
+                      <div class="row">
+                        <div class="col-lg-6">
+                          <h6 class="mb-0">
+                            Report:
+                            <?php if ($this->input->get('tanggal')) : ?>
+                              <?= date('d M Y', strtotime($this->input->get('tanggal'))) ?>
+                            <?php else : ?>
+                              Semua Tanggal
+                            <?php endif; ?>
+                            <?php if ($this->input->get('shift')) : ?>
+                              - Shift: <?= strtoupper($this->input->get('shift')) ?>
+                            <?php endif; ?>
+                            <?php if (isset($grandTotalOrderAll) && $grandTotalOrderAll > 0) : ?>
+                              <span class="badge bg-warning text-dark ms-2" style="font-size: 13px;">
+                                Total Order Keseluruhan: <?= number_format($grandTotalOrderAll, 0, ',', '.') ?>
+                              </span>
+                            <?php endif; ?>
+                          </h6>
+                        </div>
+                        <div class="col-lg-6">
+                          <div class="custom-control custom-switch float-end">
+                            <input type="checkbox" class="custom-control-input" id="customSwitch1">
+                            <label class="custom-control-label" for="customSwitch1">Show Collapsed</label>
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                  <div class="card-body">
-                    <div class="accordion" id="accordionCustomer">
-                      <?php
-                      $no = 1;
-                      foreach ($groupedByCustomer as $customerId => $customerData) :
-                      ?>
-                        <div class="accordion-item mb-2">
-                          <h2 class="accordion-header" id="heading<?= $customerId ?>">
-                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse<?= $customerId ?>" aria-expanded="false" aria-controls="collapse<?= $customerId ?>">
-                              <strong><?= $no++ ?>. <?= htmlspecialchars($customerData['customer_name']) ?></strong>
-                              <span class="badge bg-primary ms-2"><?= count($customerData['kantins']) ?> Kantin</span>
-                            </button>
-                          </h2>
-                          <div id="collapse<?= $customerId ?>" class="accordion-collapse collapse xcollapse" aria-labelledby="heading<?= $customerId ?>" data-bs-parent="#accordionCustomer">
-                            <div class="accordion-body">
-                              <div class="table-responsive">
-                                <table class="table table-bordered table-sm table-hover">
-                                  <thead class="table-primary">
-                                    <tr>
-                                      <th class="text-center" style="width:40px;">No</th>
-                                      <th>Nama Menu</th>
-                                      <th>Jenis Menu</th>
-                                      <th>Kondimen</th>
-                                      <th>Kategori</th>
-                                      <?php foreach ($customerData['kantins'] as $kantin) : ?>
-                                        <th class="text-center"><?= htmlspecialchars($kantin) ?></th>
-                                      <?php endforeach; ?>
-                                      <th class="text-center" style="width:60px;">Total</th>
-                                      <th class="text-center" style="background:#ffc; width:80px;">Total Order</th>
-                                    </tr>
-                                  </thead>
-                                  <tbody>
-                                    <?php
-                                    $menuNo = 1;
-                                    foreach ($customerData['menu_data'] as $menu) :
-                                      $kondimenList = isset($menu['kondimen_list']) && is_array($menu['kondimen_list']) ? $menu['kondimen_list'] : [];
-                                      $rowspan = count($kondimenList);
-                                      $first = true;
-                                      $totalOrderLaukUtama = 0;
-                                      foreach ($kondimenList as $kondimen) {
-                                        if (isset($kondimen['kategori']) && strtolower($kondimen['kategori']) == 'lauk utama') {
-                                          $totalOrderLaukUtama += array_sum(array_map('intval', $kondimen['qty_per_kantin'] ?? []));
-                                        }
-                                      }
-                                      foreach ($kondimenList as $kondimen) :
-                                    ?>
-                                        <tr>
-                                          <?php if ($first) : ?>
-                                            <td class="text-center align-middle" rowspan="<?= $rowspan ?>"><?= $menuNo++ ?></td>
-                                            <td class="align-middle" rowspan="<?= $rowspan ?>"><?= htmlspecialchars($menu['nama_menu'] ?? '-') ?></td>
-                                            <td class="align-middle" rowspan="<?= $rowspan ?>"><?= htmlspecialchars($menu['jenis_menu'] ?? '-') ?></td>
-                                          <?php endif; ?>
-                                          <td><?= htmlspecialchars($kondimen['nama_kondimen'] ?? '-') ?></td>
-                                          <td><?= htmlspecialchars($kondimen['kategori'] ?? '-') ?></td>
-                                          <?php foreach ($customerData['kantins'] as $kantin) :
-                                            $qtySafe = isset($kondimen['qty_per_kantin'][$kantin]) ? intval($kondimen['qty_per_kantin'][$kantin]) : 0;
-                                          ?>
-                                            <td class="text-center"><?= $qtySafe ?></td>
-                                          <?php endforeach; ?>
-                                          <td class="text-center"><strong><?= array_sum(array_map('intval', $kondimen['qty_per_kantin'] ?? [])) ?></strong></td>
-                                          <?php if ($first) : ?>
-                                            <td class="text-center align-middle" rowspan="<?= $rowspan ?>" style="background:#ffc; color:#222; font-weight:bold;"><?= $totalOrderLaukUtama ?></td>
-                                          <?php endif; ?>
-                                        </tr>
-                                        <?php $first = false; ?>
-                                    <?php endforeach;
-                                    endforeach; ?>
-                                  </tbody>
-                                  <tfoot class="table-dark">
-                                    <tr>
-                                      <th colspan="<?= 6 + count($customerData['kantins']) ?>" class="text-end">Total</th>
+                    <div class="card-body">
+                      <div class="accordion" id="accordionCustomer">
+                        <?php
+                        $no = 1;
+                        foreach ($groupedByCustomer as $customerId => $customerData) :
+                        ?>
+                          <div class="accordion-item mb-2">
+                            <h2 class="accordion-header" id="heading<?= $customerId ?>">
+                              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse<?= $customerId ?>" aria-expanded="false" aria-controls="collapse<?= $customerId ?>">
+                                <strong><?= $no++ ?>. <?= htmlspecialchars($customerData['customer_name']) ?></strong>
+                                <span class="badge bg-primary ms-2"><?= count($customerData['kantins']) ?> Kantin</span>
+                                <?php
+                                $totalOrder = isset($customerData['grand_total_order']) ? (int)$customerData['grand_total_order'] : 0;
+                                ?>
+                                <span class="badge bg-warning text-dark ms-2">Total Order: <?= $totalOrder ?></span>
+                              </button>
+                            </h2>
+                            <div id="collapse<?= $customerId ?>" class="accordion-collapse collapse xcollapse" aria-labelledby="heading<?= $customerId ?>" data-bs-parent="#accordionCustomer">
+                              <div class="accordion-body">
+                                <div class="table-responsive">
+                                  <table class="table table-bordered table-sm table-hover">
+                                    <thead class="table-primary">
+                                      <tr>
+                                        <th class="text-center" style="width:40px;">No</th>
+                                        <th>Nama Menu</th>
+                                        <th>Jenis Menu</th>
+                                        <th class="text-center" style="width:80px;">Shift</th>
+                                        <th>Kondimen</th>
+                                        <th>Kategori</th>
+                                        <?php foreach ($customerData['kantins'] as $kantin) : ?>
+                                          <th class="text-center"><?= htmlspecialchars($kantin) ?></th>
+                                        <?php endforeach; ?>
+                                        <th class="text-center" style="width:60px;">Total</th>
+                                        <th class="text-center" style="background:#ffc; width:80px;">Total Order</th>
+                                      </tr>
+                                    </thead>
+                                    <tbody>
                                       <?php
-                                      // Hitung grand total hanya dari kolom Total Order (lauk utama per menu)
-                                      $grandOrder = 0;
-                                      foreach ($customerData['menu_data'] as $menu) {
+                                      $menuNo = 1;
+                                      foreach ($customerData['menu_data'] as $menu) :
                                         $kondimenList = isset($menu['kondimen_list']) && is_array($menu['kondimen_list']) ? $menu['kondimen_list'] : [];
-                                        $totalOrderLaukUtama = 0;
-                                        foreach ($kondimenList as $kondimen) {
-                                          if (isset($kondimen['kategori']) && strtolower($kondimen['kategori']) == 'lauk utama') {
-                                            $totalOrderLaukUtama += array_sum(array_map('intval', $kondimen['qty_per_kantin'] ?? []));
-                                          }
+                                        $kondimen_count = count($kondimenList);
+                                        if ($kondimen_count === 0) {
+                                          $kondimenList[] = [
+                                            'nama_kondimen' => '-',
+                                            'kategori' => '-',
+                                            'qty_per_kantin' => []
+                                          ];
+                                          $kondimen_count = 1;
                                         }
-                                        $grandOrder += $totalOrderLaukUtama;
-                                      }
-                                      echo "<th class='text-center' style='background:#ffc; color:#222; font-weight:bold;'>$grandOrder</th>";
+
+                                        $first = true;
+                                        $total_order = isset($menu['total_order_customer']) ? intval($menu['total_order_customer']) : 0;
+
+                                        foreach ($kondimenList as $kIndex => $kondimen) :
+                                          $counterLabel = ($kIndex + 1) . '.';
+                                          $qtyPerKantin = isset($kondimen['qty_per_kantin']) && is_array($kondimen['qty_per_kantin']) ? $kondimen['qty_per_kantin'] : [];
                                       ?>
-                                    </tr>
-                                  </tfoot>
-                                </table>
+                                          <tr>
+                                            <?php if ($first) : ?>
+                                              <td class="text-center align-middle" rowspan="<?= $kondimen_count ?>"><?= $menuNo++ ?></td>
+                                              <td class="align-middle" rowspan="<?= $kondimen_count ?>"><?= htmlspecialchars($menu['nama_menu'] ?? '-') ?></td>
+                                              <td class="align-middle" rowspan="<?= $kondimen_count ?>"><?= htmlspecialchars($menu['jenis_menu'] ?? '-') ?></td>
+                                              <td class="text-center align-middle" rowspan="<?= $kondimen_count ?>">
+                                                <?= !empty($menu['shift']) ? strtoupper(htmlspecialchars($menu['shift'])) : '-' ?>
+                                              </td>
+                                            <?php endif; ?>
+                                            <td>
+                                              <span class="text-muted fw-semibold me-1"><?= $counterLabel ?></span>
+                                              <span><?= htmlspecialchars($kondimen['nama_kondimen'] ?? '-') ?></span>
+                                            </td>
+                                            <td><?= htmlspecialchars($kondimen['kategori'] ?? '-') ?></td>
+                                            <?php foreach ($customerData['kantins'] as $kantin) :
+                                              $qtySafe = isset($qtyPerKantin[$kantin]) ? intval($qtyPerKantin[$kantin]) : 0;
+                                            ?>
+                                              <td class="text-center"><?= $qtySafe ?></td>
+                                            <?php endforeach; ?>
+                                            <td class="text-center"><strong><?= array_sum(array_map('intval', $qtyPerKantin)) ?></strong></td>
+                                            <?php if ($first) : ?>
+                                              <td rowspan="<?= $kondimen_count ?>" class="text-center bg-warning">
+                                                <strong><?= $total_order ?></strong>
+                                              </td>
+                                            <?php endif; ?>
+                                          </tr>
+                                          <?php $first = false; ?>
+                                      <?php endforeach;
+                                      endforeach; ?>
+                                    </tbody>
+                                    <tfoot class="table-dark">
+                                      <tr>
+                                        <th colspan="<?= 7 + count($customerData['kantins']) ?>" class="text-end">Total</th>
+                                        <?php
+                                        // ✅ Hitung grand total dari total_order_customer
+                                        $grandOrder = 0;
+                                        foreach ($customerData['menu_data'] as $menu) {
+                                          $grandOrder += intval($menu['total_order_customer']);
+                                        }
+                                        echo "<th class='text-center' style='background:#ffc; color:#222; font-weight:bold;'>$grandOrder</th>";
+                                        ?>
+                                      </tr>
+                                    </tfoot>
+                                  </table>
+                                </div>
                               </div>
                             </div>
                           </div>
-                        </div>
-                      <?php endforeach; ?>
+                        <?php endforeach; ?>
+                      </div>
                     </div>
                   </div>
-                </div>
+                <?php else : ?>
+                  <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                    <i class="mdi mdi-alert-outline me-2"></i>
+                    <strong>Data Tidak Ditemukan!</strong>
+                    <br>
+                    Tidak ada data menu harian yang sesuai dengan filter.
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                  </div>
+                <?php endif; ?>
               <?php else : ?>
-                <div class="alert alert-warning alert-dismissible fade show" role="alert">
-                  <i class="mdi mdi-alert-outline me-2"></i>
-                  <strong>Data Tidak Ditemukan!</strong>
-                  <br>
-                  Tidak ada data menu harian yang sesuai dengan filter.
-                  <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                <div class="alert alert-info" role="alert">
+                  <i class="mdi mdi-information-outline me-2"></i>
+                  Silakan pilih filter terlebih dahulu untuk menampilkan laporan.
                 </div>
               <?php endif; ?>
             </div>
@@ -484,6 +510,7 @@
   <!-- <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script> -->
 
   <script src="<?php echo base_url('assets_back/js/app.js'); ?>"></script>
+  <?php $this->load->view('back/Report_Daily_Menu/V_Menu_Harian_Report_js'); ?>
 </body>
 
 </html>

@@ -16,16 +16,10 @@
               <input type="hidden" name="stat" id="stat" value="new">
               <input type="hidden" id="id_komponen" name="id_komponen">
             </div>
-            <div class="col-md-6">
+            <div class="col-md-12">
               <div class="form-group">
                 <label for="menu_nama">Nama Menu <span class="text-danger">*</span></label>
                 <input type="text" required name="menu_nama" id="menu_nama" class="form-control" placeholder="Masukkan nama menu">
-              </div>
-            </div>
-            <div class="col-md-6">
-              <div class="form-group">
-                <label for="menu_harga">Harga Menu</label>
-                <input type="number" min="0" name="menu_harga" id="menu_harga" class="form-control" placeholder="Masukkan harga menu">
               </div>
             </div>
             <div class="col-md-6">
@@ -46,6 +40,31 @@
                 </select>
               </div>
             </div>
+            <div class="col-md-12">
+              <div class="form-group">
+                <label for="id_bahan_utama">Bahan Utama</label>
+                <div class="multi-select-wrapper" id="bahanUtamaSelect">
+                  <div class="multi-select-box" id="bahanSelectBox">
+                    <div id="bahanTagsContainer" class="d-flex flex-wrap">
+                      <span class="placeholder-text" id="bahanPlaceholder">Search...</span>
+                    </div>
+                    <div class="controls">
+                      <i class="bi bi-x fs-5 clear-all" id="bahanClearBtn" title="Clear all" style="display:none;"></i>
+                      <div class="control-divider" style="display:none;"></div>
+                      <i class="bi bi-chevron-down ms-1"></i>
+                    </div>
+                  </div>
+                  <div class="options-menu" id="bahanDropdownMenu">
+                    <div class="search-wrapper">
+                      <input type="text" class="custom-search-input" id="bahanSearchInput" placeholder="Search..." autocomplete="off">
+                    </div>
+                    <ul class="options-list" id="bahanOptionsList"></ul>
+                  </div>
+                </div>
+                <input type="hidden" name="id_bahan_utama[]" id="id_bahan_utama" value="">
+                <small class="form-text text-muted">Pilih satu atau beberapa bahan utama. Gunakan kolom search untuk mempercepat.</small>
+              </div>
+            </div>
             <div class="col-md-6">
               <div class="form-group">
                 <label for="status_aktif">Status</label>
@@ -57,8 +76,9 @@
             </div>
             <div class="col-md-12">
               <div class="form-group">
-                <label for="menu_deskripsi">Deskripsi Menu</label>
-                <textarea name="menu_deskripsi" id="menu_deskripsi" class="form-control" rows="4" placeholder="Masukkan deskripsi menu (opsional)"></textarea>
+                <label for="menu_deskripsi">Deskripsi / Resep / Cara Membuat</label>
+                <textarea name="menu_deskripsi" id="menu_deskripsi" class="form-control" rows="8" placeholder="Masukkan deskripsi menu, resep lengkap, dan cara pembuatan...&#10;&#10;Contoh:&#10;Bahan-bahan:&#10;- Nasi putih 200gr&#10;- Ayam 100gr&#10;- Bumbu...&#10;&#10;Cara Membuat:&#10;1. Tumis bumbu hingga harum&#10;2. Masukkan ayam..." style="font-family: monospace; font-size: 13px;"></textarea>
+                <small class="form-text text-muted">Anda dapat menuliskan resep lengkap, bahan-bahan, dan cara pembuatan menu secara detail di sini.</small>
               </div>
             </div>
             <div class="col-md-12">

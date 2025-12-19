@@ -20,13 +20,13 @@
           <input type="hidden" id="id_menu_harian" name="id_menu_harian" />
 
           <div class="row">
-            <div class="col-md-4">
+            <div class="col-md-3">
               <div class="form-group mb-3">
                 <label for="tanggal">Tanggal <span class="text-danger">*</span></label>
                 <input type="date" class="form-control" name="tanggal" id="tanggal" required>
               </div>
             </div>
-            <div class="col-md-4">
+            <div class="col-md-3">
               <div class="form-group mb-3">
                 <label for="shift">Shift <span class="text-danger">*</span></label>
                 <select class="form-control" name="shift" id="shift" required>
@@ -37,7 +37,7 @@
                 </select>
               </div>
             </div>
-            <div class="col-md-4">
+            <div class="col-md-3">
               <div class="form-group mb-3">
                 <label for="jenis_menu">Jenis Menu <span class="text-danger">*</span></label>
                 <select class="form-control" name="jenis_menu" id="jenis_menu" required>
@@ -49,7 +49,15 @@
                 </select>
               </div>
             </div>
+            <div class="col-md-3">
+              <div class="form-group mb-3">
+                <label for="nama_menu">Nama Menu <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" name="nama_menu" id="nama_menu" required placeholder="Masukkan nama menu utama">
+              </div>
+            </div>
+          </div>
 
+          <div class="row">
             <div class="col-md-4">
               <div class="form-group mb-3">
                 <label for="id_customer">Customer <span class="text-danger">*</span></label>
@@ -81,11 +89,13 @@
             </div>
             <div class="col-md-4">
               <div class="form-group mb-3">
-                <label for="nama_menu">Nama Menu <span class="text-danger">*</span></label>
-                <input type="text" class="form-control" name="nama_menu" id="nama_menu" required placeholder="Masukkan nama menu utama">
+                <label for="total_order_customer">Total Order<span class="text-danger">*</span></label>
+                <input type="number" min="0" class="form-control" name="total_order_customer" id="total_order_customer" placeholder="Masukkan total order customer">
               </div>
             </div>
+          </div>
 
+          <div class="row">
             <div class="col-md-12">
               <div class="form-group mb-3">
                 <label for="remark" class="form-label">Catatan / Remark</label>

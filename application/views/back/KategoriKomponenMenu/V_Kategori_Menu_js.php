@@ -199,22 +199,22 @@
 
 			// GUNAKAN VARIABEL DESKRIPSI DI TEMPLATE (BUKAN escapeHtml lagi)
 			return `
-        <tr>
-            <td class="text-center col-no">${no}</td>
-            <td class="col-nama">${escapeHtml(item.nama_kategori)}</td>
-            <td class="col-deskripsi">${deskripsi}</td>
-            <td class="text-center col-aksi">
-                <div class="table-action-buttons">
-                    <button class="btn btn-warning btn-sm btn-edit" data-id="${item.id_kategori}" type="button">
-                        <i class="fas fa-edit"></i> Edit
-                    </button>
-                    <button class="btn btn-danger btn-sm btn-delete" data-id="${item.id_kategori}" type="button">
-                        <i class="fas fa-trash"></i> Hapus
-                    </button>
-                </div>
-            </td>
-        </tr>
-    `;
+		<tr>
+			<td class="text-center fw-bold">${no}</td>
+			<td class="fw-semibold">${escapeHtml(item.nama_kategori)}</td>
+			<td>${deskripsi}</td>
+			<td class="text-center">
+				<div class="btn-group btn-group-sm" role="group">
+					<button class="btn btn-warning btn-edit" data-id="${item.id_kategori}" type="button" title="Edit">
+						<i class="fas fa-edit"></i>
+					</button>
+					<button class="btn btn-danger btn-delete" data-id="${item.id_kategori}" type="button" title="Hapus">
+						<i class="fas fa-trash"></i>
+					</button>
+				</div>
+			</td>
+		</tr>
+	`;
 		}
 
 		function buildEmptyRow() {

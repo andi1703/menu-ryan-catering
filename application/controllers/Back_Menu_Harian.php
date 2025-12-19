@@ -48,13 +48,27 @@ class Back_Menu_Harian extends CI_Controller
           'ids' => [],
           'kantins' => [],
           'kondimen_data' => [],
-          'total_orderan' => 0
+          'total_orderan' => 0,
+          'created_at' => $item['created_at'] ?? null,
+          'updated_at' => $item['updated_at'] ?? null
         ];
       }
 
       // Tambahkan ID dan kantin
       $grouped[$key]['ids'][] = $item['id_menu_harian'];
       $grouped[$key]['kantins'][] = $item['nama_kantin'];
+
+      if (!empty($item['created_at'])) {
+        if (empty($grouped[$key]['created_at']) || $item['created_at'] < $grouped[$key]['created_at']) {
+          $grouped[$key]['created_at'] = $item['created_at'];
+        }
+      }
+
+      if (!empty($item['updated_at'])) {
+        if (empty($grouped[$key]['updated_at']) || $item['updated_at'] > $grouped[$key]['updated_at']) {
+          $grouped[$key]['updated_at'] = $item['updated_at'];
+        }
+      }
 
       // ✅ AMBIL KONDIMEN UNTUK SETIAP MENU HARIAN
       $kondimen_list = $this->M_Menu_Harian->get_all_kondimen($item['id_menu_harian']);
@@ -94,22 +108,16 @@ class Back_Menu_Harian extends CI_Controller
 
     // ✅ HITUNG TOTAL ORDERAN BERDASARKAN LAUK UTAMA - PERBAIKAN UTAMA
     foreach ($grouped as &$group) {
-      $total_orderan = 0; // Total keseluruhan dari semua kantin
-
-      // Hitung dari kondimen yang kategorinya "lauk utama"
-      foreach ($group['kondimen_data'] as $kondimen) {
-        $kategori = strtolower($kondimen['kategori']);
-
-        // Cek apakah kategori adalah lauk utama
-        if (strpos($kategori, 'lauk utama') !== false || $kategori === 'lauk_utama') {
-          // ✅ JUMLAHKAN DARI SEMUA KANTIN
-          foreach ($kondimen['qty_per_kantin'] as $kantin => $qty) {
-            $total_orderan += (int)$qty;
-          }
-        }
+      // ✅ AMBIL DARI DATABASE (MANUAL INPUT)
+      $first_id = isset($group['ids'][0]) ? $group['ids'][0] : null;
+      if ($first_id) {
+        $this->db->select('total_orderan_customer'); // ✅ SESUAIKAN NAMA FIELD
+        $this->db->where('id_menu_harian', $first_id);
+        $result = $this->db->get('menu_harian')->row();
+        $group['total_orderan'] = $result ? (int)$result->total_orderan_customer : 0;
+      } else {
+        $group['total_orderan'] = 0;
       }
-
-      $group['total_orderan'] = $total_orderan;
     }
 
     // Convert ke array biasa
@@ -153,53 +161,13 @@ class Back_Menu_Harian extends CI_Controller
         throw new Exception('Kantin harus dipilih');
       }
 
-      // ✅ HITUNG TOTAL ORDERAN UNTUK SEMUA KANTIN SEKALIGUS
-      $grand_total = 0;
-      foreach ($kondimen as $k) {
-        if (empty($k['id_komponen'])) continue;
-
-        // Cek kategori kondimen
-        $this->db->select('km.nama_kategori');
-        $this->db->from('menu m');
-        $this->db->join('kategori_menu km', 'm.id_kategori = km.id_kategori');
-        $this->db->where('m.id_komponen', $k['id_komponen']);
-        $kategori_data = $this->db->get()->row_array();
-
-        if ($kategori_data) {
-          $kategori = strtolower($kategori_data['nama_kategori']);
-          if (strpos($kategori, 'lauk utama') !== false || $kategori === 'lauk_utama') {
-            // ✅ JUMLAHKAN QTY DARI SEMUA KANTIN
-            foreach ($id_kantins as $id_kantin) {
-              $qty = isset($k['qty_per_kantin'][$id_kantin]) ? (int)$k['qty_per_kantin'][$id_kantin] : 0;
-              $grand_total += $qty;
-            }
-          }
-        }
+      // ✅ UBAH NAMA VARIABEL SESUAI DB
+      $total_orderan_customer = $this->input->post('total_order_customer'); // dari form
+      if (empty($total_orderan_customer)) {
+        $total_orderan_customer = 0;
       }
 
       foreach ($id_kantins as $id_kantin) {
-        // ✅ HITUNG TOTAL ORDERAN SPESIFIK UNTUK KANTIN INI
-        $total_orderan_kantin = 0;
-        foreach ($kondimen as $k) {
-          if (empty($k['id_komponen'])) continue;
-
-          // Cek kategori kondimen
-          $this->db->select('km.nama_kategori');
-          $this->db->from('menu m');
-          $this->db->join('kategori_menu km', 'm.id_kategori = km.id_kategori');
-          $this->db->where('m.id_komponen', $k['id_komponen']);
-          $kategori_data = $this->db->get()->row_array();
-
-          if ($kategori_data) {
-            $kategori = strtolower($kategori_data['nama_kategori']);
-            if (strpos($kategori, 'lauk utama') !== false || $kategori === 'lauk_utama') {
-              $qty = isset($k['qty_per_kantin'][$id_kantin]) ? (int)$k['qty_per_kantin'][$id_kantin] : 0;
-              $total_orderan_kantin += $qty;
-            }
-          }
-        }
-
-        // Insert menu harian untuk setiap kantin
         $menu_data = [
           'tanggal' => $data['tanggal'],
           'shift' => $data['shift'],
@@ -207,7 +175,7 @@ class Back_Menu_Harian extends CI_Controller
           'id_kantin' => $id_kantin,
           'jenis_menu' => $data['jenis_menu'],
           'nama_menu' => $data['nama_menu'],
-          'total_orderan_perkantin' => $total_orderan_kantin, // ✅ TOTAL PER KANTIN
+          'total_orderan_customer' => $total_orderan_customer, // ✅ SESUAIKAN DENGAN NAMA FIELD DB
           'remark' => $data['remark'] ?? null
         ];
 
@@ -268,6 +236,12 @@ class Back_Menu_Harian extends CI_Controller
         throw new Exception('Kantin harus dipilih');
       }
 
+      // ✅ UBAH NAMA VARIABEL SESUAI DB
+      $total_orderan_customer = $this->input->post('total_order_customer');
+      if (empty($total_orderan_customer)) {
+        $total_orderan_customer = 0;
+      }
+
       // ✅ HAPUS DATA LAMA BERDASARKAN KOMBINASI YANG SAMA
       $this->db->select('id_menu_harian');
       $this->db->where('tanggal', $existing['tanggal']);
@@ -287,29 +261,8 @@ class Back_Menu_Harian extends CI_Controller
         $this->M_Menu_Harian->delete($record['id_menu_harian']);
       }
 
-      // ✅ INSERT DATA BARU DENGAN PERHITUNGAN TOTAL YANG BENAR
+      // ✅ INSERT DATA BARU
       foreach ($id_kantins as $id_kantin) {
-        // Hitung total orderan untuk kantin ini
-        $total_orderan_kantin = 0;
-        foreach ($kondimen as $k) {
-          if (empty($k['id_komponen'])) continue;
-
-          // Cek kategori kondimen
-          $this->db->select('km.nama_kategori');
-          $this->db->from('menu m');
-          $this->db->join('kategori_menu km', 'm.id_kategori = km.id_kategori');
-          $this->db->where('m.id_komponen', $k['id_komponen']);
-          $kategori_data = $this->db->get()->row_array();
-
-          if ($kategori_data) {
-            $kategori = strtolower($kategori_data['nama_kategori']);
-            if (strpos($kategori, 'lauk utama') !== false || $kategori === 'lauk_utama') {
-              $qty = isset($k['qty_per_kantin'][$id_kantin]) ? (int)$k['qty_per_kantin'][$id_kantin] : 0;
-              $total_orderan_kantin += $qty;
-            }
-          }
-        }
-
         $menu_data = [
           'tanggal' => $data['tanggal'],
           'shift' => $data['shift'],
@@ -317,7 +270,7 @@ class Back_Menu_Harian extends CI_Controller
           'id_kantin' => $id_kantin,
           'jenis_menu' => $data['jenis_menu'],
           'nama_menu' => $data['nama_menu'],
-          'total_orderan_perkantin' => $total_orderan_kantin, // ✅ TOTAL PER KANTIN
+          'total_orderan_customer' => $total_orderan_customer, // ✅ SESUAIKAN DENGAN NAMA FIELD DB
           'remark' => $data['remark'] ?? null
         ];
 
@@ -431,77 +384,85 @@ class Back_Menu_Harian extends CI_Controller
 
   public function get_by_id($id)
   {
-    if (empty($id)) {
-      echo json_encode(['status' => 'error', 'msg' => 'ID tidak valid']);
-      return;
-    }
+    header('Content-Type: application/json');
 
-    // ✅ AMBIL DATA MENU HARIAN
-    $menu = $this->M_Menu_Harian->get_by_id($id);
-
-    if (!$menu) {
-      echo json_encode(['status' => 'error', 'msg' => 'Data tidak ditemukan']);
-      return;
-    }
-
-    // ✅ AMBIL SEMUA MENU HARIAN DENGAN TANGGAL, SHIFT, CUSTOMER, JENIS_MENU, NAMA_MENU YANG SAMA
-    $this->db->select('id_menu_harian, id_kantin, total_orderan_perkantin');
-    $this->db->from('menu_harian');
-    $this->db->where('tanggal', $menu['tanggal']);
-    $this->db->where('shift', $menu['shift']);
-    $this->db->where('id_customer', $menu['id_customer']);
-    $this->db->where('jenis_menu', $menu['jenis_menu']);
-    $this->db->where('nama_menu', $menu['nama_menu']);
-    $related_menus = $this->db->get()->result_array();
-
-    // ✅ KUMPULKAN ID KANTIN
-    $id_kantins = [];
-    foreach ($related_menus as $rm) {
-      $id_kantins[] = $rm['id_kantin'];
-    }
-    $menu['id_kantins'] = $id_kantins;
-
-    // ✅ AMBIL KONDIMEN DARI SEMUA MENU HARIAN TERKAIT DENGAN JOIN KATEGORI
-    $all_kondimen = [];
-    foreach ($related_menus as $rm) {
-      $this->db->select('mhk.*, m.menu_nama as nama_kondimen, km.nama_kategori as kategori_kondimen');
-      $this->db->from('menu_harian_kondimen mhk');
-      $this->db->join('menu m', 'mhk.id_komponen = m.id_komponen');
-      $this->db->join('kategori_menu km', 'm.id_kategori = km.id_kategori');
-      $this->db->where('mhk.id_menu_harian', $rm['id_menu_harian']);
-      $kondimen_items = $this->db->get()->result_array();
-
-      foreach ($kondimen_items as $k) {
-        $all_kondimen[] = array_merge($k, ['id_kantin' => $rm['id_kantin']]);
-      }
-    }
-
-    // ✅ GROUP KONDIMEN BY id_komponen
-    $grouped_kondimen = [];
-    foreach ($all_kondimen as $k) {
-      $key = $k['id_komponen'];
-
-      if (!isset($grouped_kondimen[$key])) {
-        $grouped_kondimen[$key] = [
-          'id_komponen' => $k['id_komponen'],
-          'nama_kondimen' => $k['nama_kondimen'],
-          'kategori_kondimen' => $k['kategori_kondimen'], // ✅ PASTIKAN KATEGORI ADA
-          'qty_per_kantin' => []
-        ];
+    try {
+      if (!$id) {
+        echo json_encode(['status' => 'error', 'msg' => 'ID tidak valid']);
+        return;
       }
 
-      // SET QTY PER KANTIN
-      $grouped_kondimen[$key]['qty_per_kantin'][$k['id_kantin']] = $k['qty_kondimen'];
+      $this->db->where('id_menu_harian', $id);
+      $menu = $this->db->get('menu_harian')->row_array();
+
+      if (!$menu) {
+        echo json_encode(['status' => 'error', 'msg' => 'Data tidak ditemukan']);
+        return;
+      }
+
+      $this->db->select('id_menu_harian, id_kantin, total_orderan_customer');
+      $this->db->where('tanggal', $menu['tanggal']);
+      $this->db->where('shift', $menu['shift']);
+      $this->db->where('id_customer', $menu['id_customer']);
+      $this->db->where('jenis_menu', $menu['jenis_menu']);
+      $this->db->where('nama_menu', $menu['nama_menu']);
+      $related_menus = $this->db->get('menu_harian')->result_array();
+
+      $id_kantins = [];
+      $total_orderan_customer = 0;
+
+      foreach ($related_menus as $rm) {
+        $id_kantins[] = (int)$rm['id_kantin'];
+
+        if (empty($total_orderan_customer) && !empty($rm['total_orderan_customer'])) {
+          $total_orderan_customer = (int)$rm['total_orderan_customer'];
+        }
+      }
+
+      $menu['id_kantins'] = $id_kantins;
+      $menu['total_orderan_customer'] = $total_orderan_customer;
+
+      // ✅ PERBAIKI QUERY KONDIMEN - TAMBAHKAN KATEGORI
+      $kondimen_grouped = [];
+
+      foreach ($related_menus as $rm) {
+        $this->db->select('mk.id_komponen, mk.qty_kondimen, m.menu_nama as nama_kondimen, km.nama_kategori as kategori_kondimen');
+        $this->db->from('menu_harian_kondimen mk');
+        $this->db->join('menu m', 'mk.id_komponen = m.id_komponen', 'left');
+        $this->db->join('kategori_menu km', 'm.id_kategori = km.id_kategori', 'left');
+        $this->db->where('mk.id_menu_harian', $rm['id_menu_harian']);
+        $kondimen_list = $this->db->get()->result_array();
+
+        foreach ($kondimen_list as $k) {
+          $key = $k['id_komponen'];
+
+          if (!isset($kondimen_grouped[$key])) {
+            $kondimen_grouped[$key] = [
+              'id_komponen' => $k['id_komponen'],
+              'nama_kondimen' => $k['nama_kondimen'] ?? '',
+              'kategori_kondimen' => $k['kategori_kondimen'] ?? '', // ✅ PASTIKAN ADA
+              'qty_per_kantin' => []
+            ];
+          }
+
+          $kondimen_grouped[$key]['qty_per_kantin'][$rm['id_kantin']] = $k['qty_kondimen'];
+        }
+      }
+
+      $kondimen_result = array_values($kondimen_grouped);
+
+      echo json_encode([
+        'status' => 'success',
+        'data' => $menu,
+        'kondimen' => $kondimen_result
+      ]);
+    } catch (Exception $e) {
+      log_message('error', 'Error get_by_id: ' . $e->getMessage());
+      echo json_encode([
+        'status' => 'error',
+        'msg' => 'Terjadi kesalahan: ' . $e->getMessage()
+      ]);
     }
-
-    // ✅ CONVERT KE ARRAY BIASA
-    $kondimen_result = array_values($grouped_kondimen);
-
-    echo json_encode([
-      'status' => 'success',
-      'data' => $menu,
-      'kondimen' => $kondimen_result
-    ]);
   }
 
   public function get_kantin_by_customer()

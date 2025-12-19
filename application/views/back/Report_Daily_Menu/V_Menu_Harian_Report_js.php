@@ -1,107 +1,39 @@
 <script type="text/javascript">
   $(document).ready(function() {
-    // Checkbox Kantin Dropdown
-    function updateKantinText() {
+    var $dropdownButton = $('#kantin-dropdown');
+
+    function updateKantinState() {
       var count = $('.kantin-checkbox:checked').length;
       $('#kantin-selected-count').text(count > 0 ? count + ' Kantin Dipilih' : '- Pilih Kantin -');
+      $dropdownButton.toggleClass('has-selection', count > 0);
     }
-    $('.kantin-checkbox').on('change', updateKantinText);
-    $('#selectAllKantin').click(function(e) {
+
+    $(document).on('change', '.kantin-checkbox', updateKantinState);
+
+    $('#selectAllKantin').on('click', function(e) {
       e.preventDefault();
       $('.kantin-checkbox').prop('checked', true);
-      updateKantinText();
+      updateKantinState();
     });
-    $('#deselectAllKantin').click(function(e) {
+
+    $('#deselectAllKantin').on('click', function(e) {
       e.preventDefault();
       $('.kantin-checkbox').prop('checked', false);
-      updateKantinText();
+      updateKantinState();
     });
-    updateKantinText();
 
-    // Mencegah dropdown tertutup saat klik di dalam dropdown
     $('.dropdown-menu').on('click', function(e) {
       e.stopPropagation();
     });
 
-    // Auto scroll ke alert jika ada data tidak ditemukan
     if ($('.alert-warning').length > 0) {
       $('html, body').animate({
         scrollTop: $('.alert-warning').offset().top - 100
       }, 500);
     }
+
+    updateKantinState();
   });
-
-  // Fungsi Print Report
-  function printReport() {
-    var tanggal = $('#tanggal').val();
-    if (!tanggal) {
-      Swal.fire('Perhatian', 'Pilih tanggal dahulu', 'warning');
-      return;
-    }
-    if ($('.kantin-checkbox:checked').length === 0) {
-      Swal.fire('Perhatian', 'Pilih minimal 1 kantin', 'warning');
-      return;
-    }
-    var printWindow = window.open('', '_blank');
-    printWindow.document.write(generatePrintHTML());
-    printWindow.document.close();
-    printWindow.focus();
-    setTimeout(function() {
-      printWindow.print();
-    }, 500);
-  }
-
-  // Fungsi Generate Print HTML
-  function generatePrintHTML() {
-    var tanggal = formatDateIndo($('#tanggal').val());
-    var shift = $('#shift-select').val() || '-';
-    var html = `
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <title>MENU HARIAN REPORT</title>
-      <style>
-        @page { size: A4 landscape; margin: 5mm; }
-        body { font-family: Arial, sans-serif; font-size: 10px; margin: 0; padding: 10px; color: #000; }
-        .header-title { text-align: center; font-weight: bold; font-size: 16px; margin-bottom: 5px; text-transform: uppercase; }
-        .meta-header { overflow: hidden; margin-bottom: 15px; font-weight: bold; font-size: 12px; border-bottom: 2px solid #000; padding-bottom: 5px; }
-        .meta-left { float: left; width: 50%; }
-        .meta-right { float: right; width: 50%; text-align: right; }
-        table { width: 100%; border-collapse: collapse; font-size: 9px; }
-        th { background: #333; color: #fff; border: 1px solid #000; padding: 2px; font-weight: bold; text-align: center; }
-        td { border: 1px solid #000; padding: 2px 4px; }
-        tfoot td { background-color: #ddd; font-weight: bold; border-top: 2px solid #000; }
-      </style>
-    </head>
-    <body>
-      <div class="header-title">MENU HARIAN REPORT</div>
-      <div class="meta-header">
-        <div class="meta-left">SHIFT : ${shift.toUpperCase()}</div>
-        <div class="meta-right">TANGGAL : ${tanggal}</div>
-      </div>
-      <div>
-  `;
-    // Copy table dari halaman
-    $('.accordion-item').each(function() {
-      var customerName = $(this).find('.accordion-button strong').text().trim();
-      var table = $(this).find('table');
-      html += `<h4 style="margin:10px 0 5px 0;">${customerName}</h4>`;
-      html += table.prop('outerHTML');
-    });
-    html += `
-      </div>
-    </body>
-    </html>
-  `;
-    return html;
-  }
-
-  // Format tanggal ke Indonesia
-  function formatDateIndo(dateStr) {
-    if (!dateStr) return '';
-    var parts = dateStr.split('-');
-    return parts.length === 3 ? parts[2] + '/' + parts[1] + '/' + parts[0] : dateStr;
-  }
 </script>
 
 <script>

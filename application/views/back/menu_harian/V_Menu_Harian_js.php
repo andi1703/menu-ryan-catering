@@ -15,6 +15,38 @@
     var renderTimeout = null;
     var dataTable = null;
 
+    function formatTanggal(tanggal) {
+      if (!tanggal) {
+        return "-";
+      }
+
+      var value = String(tanggal).trim();
+      var isoMatch = value.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+      if (isoMatch) {
+        return isoMatch[3] + "-" + isoMatch[2] + "-" + isoMatch[1];
+      }
+
+      var altMatch = value.match(/^(\d{2})-(\d{2})-(\d{4})$/);
+      if (altMatch) {
+        return value;
+      }
+
+      return value;
+    }
+
+    function formatJamInput(createdAt) {
+      if (!createdAt) {
+        return "";
+      }
+
+      var text = String(createdAt);
+      var match = text.match(/(\d{2}:\d{2})/);
+      if (match && match[1]) {
+        return match[1];
+      }
+      return "";
+    }
+
     function showSuccess(message) {
       if (typeof Swal !== "undefined") {
         Swal.fire({
@@ -332,10 +364,17 @@
       var nestedKondimen = buildNestedKondimenTable(item.kondimen_data, item.kantins || []);
       var firstId = item.ids && item.ids.length > 0 ? item.ids[0] : 0;
 
+      var tanggalDisplay = formatTanggal(item.tanggal);
+      var jamDisplay = formatJamInput(item.created_at || item.updated_at || null);
+      var jamHtml = jamDisplay ? `<div class="text-muted small">${jamDisplay}</div>` : "";
+
       return `
         <tr>
           <td class="text-center">${no}</td>
-          <td>${item.tanggal}</td>
+          <td>
+            <div class="fw-semibold">${tanggalDisplay}</div>
+            ${jamHtml}
+          </td>
           <td class="text-center">${getShiftBadge(item.shift)}</td>
           <td>${item.nama_customer}</td>
           <td>${kantinDisplay}</td>
@@ -358,11 +397,11 @@
     }
 
     function buildLoadingRow() {
-      return `<tr><td class="text-center" colspan="10"><div class="text-muted p-3"><i class="fas fa-spinner fa-spin fa-2x mb-1"></i><div>Memuat data...</div></div></td></tr>`;
+      return `<tr><td class="text-center" colspan="11"><div class="text-muted p-3"><i class="fas fa-spinner fa-spin fa-2x mb-1"></i><div>Memuat data...</div></div></td></tr>`;
     }
 
     function buildEmptyRow() {
-      return `<tr><td class="text-center" colspan="10"><div class="text-muted p-3"><i class="fas fa-utensils fa-2x mb-1"></i><div>Tidak ada data menu harian</div></div></td></tr>`;
+      return `<tr><td class="text-center" colspan="11"><div class="text-muted p-3"><i class="fas fa-utensils fa-2x mb-1"></i><div>Tidak ada data menu harian</div></div></td></tr>`;
     }
 
     function initDataTable() {
@@ -502,77 +541,60 @@
     };
 
     window.edit_menu_harian = function(id) {
-      kondimenList = [];
-      $("#form-menu-harian")[0].reset();
-      $(".kantin-checkbox").prop("checked", false);
-      $("#table-kondimen-menu tbody").empty();
-      $("#table-kondimen-menu thead").empty();
-      updateKantinDropdownText();
+      if (!id) return;
 
       $.ajax({
-        url: base_url + "/get_by_id/" + id,
-        type: "GET",
-        dataType: "json",
-        success: function(response) {
-          if (response.status === "success") {
-            var data = response.data;
-            var kondimen = response.kondimen || [];
+        url: base_url + '/get_by_id/' + id,
+        type: 'GET',
+        dataType: 'json',
+        success: function(res) {
+          if (res && res.status === 'success' && res.data) {
+            kondimenList = [];
 
-            // ✅ SET BASIC FORM DATA
-            $("#id_menu_harian").val(data.id_menu_harian);
-            $("#tanggal").val(data.tanggal);
-            $("#shift").val(data.shift);
-            $("#jenis_menu").val(data.jenis_menu);
-            $("#id_customer").val(data.id_customer);
-            $("#nama_menu").val(data.nama_menu);
-            $("#remark").val(data.remark || "");
+            $('#id_menu_harian').val(res.data.id_menu_harian);
+            $('#tanggal').val(res.data.tanggal);
+            $('#shift').val(res.data.shift);
+            $('#jenis_menu').val(res.data.jenis_menu);
+            $('#nama_menu').val(res.data.nama_menu);
+            $('#id_customer').val(res.data.id_customer).trigger('change');
+            $('#total_order_customer').val(res.data.total_orderan_customer || 0);
+            $('#remark').val(res.data.remark || '');
 
-            // ✅ PARSE MULTIPLE KANTIN IDS
-            var existingKantins = [];
-            if (data.id_kantins && Array.isArray(data.id_kantins)) {
-              existingKantins = data.id_kantins.map(function(k) {
-                return k.toString();
-              });
-            } else if (data.id_kantin) {
-              existingKantins = [data.id_kantin.toString()];
-            }
+            setTimeout(function() {
+              if (res.data.id_kantins && Array.isArray(res.data.id_kantins)) {
+                res.data.id_kantins.forEach(function(kid) {
+                  $('#kantin_' + kid).prop('checked', true);
+                });
+                updateKantinDropdownText();
+              }
 
-            // ✅ PROCESS KONDIMEN DATA - PERBAIKAN UTAMA
-            kondimenList = kondimen.map(function(k) {
-              return {
-                id_komponen: k.id_komponen,
-                kategori: k.kategori_kondimen || k.nama_kategori || "", // ✅ PASTIKAN KATEGORI ADA
-                qty_per_kantin: k.qty_per_kantin || {}
-              };
-            });
-
-            // ✅ LOAD KANTIN OPTIONS BERDASARKAN CUSTOMER
-            loadKantinRadioOptions(data.id_customer, function() {
-              setTimeout(function() {
-                // Set selected kantins
-                existingKantins.forEach(function(kantinId) {
-                  $("#kantin_" + kantinId).prop("checked", true);
+              // ✅ PERBAIKI MAPPING KONDIMEN - TAMBAHKAN KATEGORI
+              if (res.kondimen && Array.isArray(res.kondimen)) {
+                kondimenList = res.kondimen.map(function(k) {
+                  return {
+                    id_komponen: k.id_komponen,
+                    nama_kondimen: k.nama_kondimen || '',
+                    kategori: k.kategori_kondimen || '', // ✅ MAP KE 'kategori' (bukan 'kategori_kondimen')
+                    qty_per_kantin: k.qty_per_kantin || {}
+                  };
                 });
 
-                updateKantinDropdownText();
-
-                // ✅ RENDER KONDIMEN TABLE DENGAN DATA EXISTING
                 if (typeof window.renderKondimenTable === "function") {
                   window.renderKondimenTable();
                 }
-              }, 300);
+              }
+            }, 500);
 
-              $("#form-modal-menu-harian").modal("show");
-              $("#modalMenuHarianLabel").text("Edit Menu Harian");
-            });
-
+            $('#form-modal-menu-harian').modal('show');
+            $('#modalMenuHarianLabel').text('Edit Menu Harian');
           } else {
-            showError(response.msg || "Data tidak ditemukan!");
+            showError('Data tidak ditemukan atau format response salah');
           }
         },
         error: function(xhr, status, error) {
-          showError("Gagal mengambil data!");
-        },
+          console.error('Error get_by_id:', error);
+          showError('Gagal memuat data menu harian!');
+        }
       });
     };
 
@@ -958,7 +980,9 @@
 
       $(document).on("click", ".btn-edit-menu-harian", function() {
         var id = $(this).data("id");
-        window.edit_menu_harian(id);
+        if (typeof window.edit_menu_harian === "function") {
+          window.edit_menu_harian(id);
+        }
       });
 
       $(document).on("click", ".btn-delete-menu-harian", function() {

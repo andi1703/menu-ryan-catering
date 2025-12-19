@@ -12,7 +12,6 @@
   <link href="<?php echo base_url(); ?>assets_back/libs/datatables.net-buttons-bs4/css/buttons.bootstrap4.min.css" rel="stylesheet" type="text/css" />
   <link href="<?php echo base_url(); ?>assets_back/libs/datatables.net-select-bs4/css/select.bootstrap4.min.css" rel="stylesheet" type="text/css" />
 
-  BOOTSTRAP CSS
   <link href="<?php echo base_url(); ?>assets_back/libs/bootstrap/css/bootstrap.min.css" rel="stylesheet">
 
   <!-- SWEETALERT2 CSS -->
@@ -20,97 +19,37 @@
 
   <!-- CUSTOM CSS UNTUK WORD WRAP -->
   <style>
-    /* TABLE FIXES */
+    .table-responsive {
+      width: 100%;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      border-radius: 0.375rem;
+    }
+
     #datatable {
-      table-layout: fixed;
       width: 100% !important;
     }
 
-    #datatable th,
-    #datatable td {
-      word-wrap: break-word;
-      word-break: break-word;
-      overflow-wrap: break-word;
-      white-space: normal;
-      vertical-align: top;
-    }
-
-    /* COLUMN WIDTHS */
-    #datatable th:nth-child(1),
-    #datatable td:nth-child(1) {
-      width: 8%;
-      text-align: center;
-    }
-
-    #datatable th:nth-child(2),
-    #datatable td:nth-child(2) {
-      width: 25%;
-    }
-
-    #datatable th:nth-child(3),
-    #datatable td:nth-child(3) {
-      width: 52%;
-    }
-
-    #datatable th:nth-child(4),
-    #datatable td:nth-child(4) {
-      width: 15%;
-      text-align: center;
-    }
-
-    /* RESPONSIVE */
-    @media (max-width: 768px) {
-
-      #datatable th:nth-child(2),
-      #datatable td:nth-child(2) {
-        width: 30%;
-      }
-
-      #datatable th:nth-child(3),
-      #datatable td:nth-child(3) {
-        width: 45%;
-      }
-    }
-
-    .table-action-buttons {
-      display: flex;
-      gap: 3px;
-      justify-content: center;
-      flex-wrap: wrap;
-    }
-
-    .btn-action {
-      padding: 4px 8px;
-      font-size: 11px;
-      border-radius: 3px;
-    }
-
-    .table th {
-      background-color: #f8f9fa;
-      font-weight: 600;
-      color: #495057;
-      border-bottom: 2px solid #dee2e6;
-      padding: 12px 8px;
-    }
-
-    .table td {
-      padding: 10px 8px;
-      border-bottom: 1px solid #dee2e6;
-      line-height: 1.4;
-    }
-
-    .table tbody tr:hover {
-      background-color: #f8f9fa;
+    .table thead th,
+    .table tbody td {
+      vertical-align: middle;
     }
 
     .card {
       box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
-      border: 1px solid #e3e6f0;
+      border: 1px solid rgba(0, 0, 0, 0.125);
     }
 
     .card-header {
-      background-color: #f8f9fa;
-      border-bottom: 1px solid #e3e6f0;
+      background-color: #fff;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.125);
+    }
+
+    .table-action-buttons {
+      display: flex;
+      gap: 6px;
+      justify-content: center;
+      flex-wrap: wrap;
     }
   </style>
 </head>
@@ -167,13 +106,13 @@
 
                 <div class="card-body">
                   <div class="table-responsive">
-                    <table id="datatable" class="table table-hover table-bordered dt-responsive nowrap w-100">
-                      <thead>
+                    <table id="datatable" class="table table-striped table-hover align-middle w-100">
+                      <thead class="table-dark">
                         <tr>
-                          <th>No</th>
+                          <th class="text-center">No</th>
                           <th>Nama Kategori</th>
                           <th>Deskripsi</th>
-                          <th>Aksi</th>
+                          <th class="text-center">Aksi</th>
                         </tr>
                       </thead>
                       <tbody id="show_data_kategori">

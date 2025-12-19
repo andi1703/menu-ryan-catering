@@ -565,6 +565,186 @@
                         </thead>
                         <tbody>
                           <!-- Data dari JS -->
+                          <tr>
+                            <td class="text-center">1</td>
+                            <td>
+                              <div class="fw-semibold">01-01-2023</div>
+                              <div class="text-muted small">Jam Input: 08:00</div>
+                            </td>
+                            <td class="text-center">Pagi</td>
+                            <td>Customer A</td>
+                            <td>Kantin 1</td>
+                            <td class="text-center">Utama</td>
+                            <td>Menu Spesial</td>
+                            <td>
+                              <div class="kantin-list">
+                                <span class="badge badge-nasi">Nasi</span>
+                                <span class="badge badge-lauk-utama">Ayam Penyet</span>
+                                <span class="badge badge-pendamping-basah">Sop</span>
+                                <span class="badge badge-pendamping-kering">Kerupuk</span>
+                                <span class="badge badge-tumisan">Sayur Tumis</span>
+                                <span class="badge badge-sayuran-berkuah">Sayur Kuah</span>
+                                <span class="badge badge-sambal">Sambal</span>
+                                <span class="badge badge-buah">Buah Segar</span>
+                              </div>
+                            </td>
+                            <td class="text-center">50</td>
+                            <td class="text-center remark-cell">
+                              <div class="remark-content" style="max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                                Siang hari, jangan lupa bawa payung!
+                              </div>
+                            </td>
+                            <td class="text-center">
+                              <button class="btn btn-sm btn-info" onclick="edit_menu_harian(this)">
+                                <i class="fas fa-edit"></i>
+                              </button>
+                              <button class="btn btn-sm btn-danger" onclick="hapus_menu_harian(this)">
+                                <i class="fas fa-trash"></i>
+                              </button>
+                            </td>
+                          </tr>
+                          <tr>
+                            <td class="text-center">2</td>
+                            <td>
+                              <div class="fw-semibold">02-01-2023</div>
+                              <div class="text-muted small">Jam Input: 09:15</div>
+                            </td>
+                            <td class="text-center">Siang</td>
+                            <td>Customer B</td>
+                            <td>Kantin 2</td>
+                            <td class="text-center">Pendamping</td>
+                            <td>Menu Biasa</td>
+                            <td>
+                              <div class="kantin-list">
+                                <span class="badge badge-nasi">Nasi</span>
+                                <span class="badge badge-pendamping-kering">Kerupuk</span>
+                                <span class="badge badge-sambal">Sambal</span>
+                              </div>
+                            </td>
+                            <td class="text-center">30</td>
+                            <td class="text-center remark-cell">
+                              <div class="remark-content" style="max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                                Perlu tambahan sambal pedas.
+                              </div>
+                            </td>
+                            <td class="text-center">
+                              <button class="btn btn-sm btn-info" onclick="edit_menu_harian(this)">
+                                <i class="fas fa-edit"></i>
+                              </button>
+                              <button class="btn btn-sm btn-danger" onclick="hapus_menu_harian(this)">
+                                <i class="fas fa-trash"></i>
+                              </button>
+                            </td>
+                          </tr>
+                          <tr>
+                            <td class="text-center">3</td>
+                            <td>
+                              <div class="fw-semibold">03-01-2023</div>
+                              <div class="text-muted small">Jam Input: 11:20</div>
+                            </td>
+                            <td class="text-center">Malam</td>
+                            <td>Customer C</td>
+                            <td>Kantin 3</td>
+                            <td class="text-center">Utama</td>
+                            <td>Menu Spesial</td>
+                            <td>
+                              <div class="kantin-list">
+                                <span class="badge badge-nasi">Nasi</span>
+                                <span class="badge badge-lauk-utama">Ikan Bakar</span>
+                                <span class="badge badge-pendamping-basah">Sayur Asem</span>
+                                <span class="badge badge-pendamping-kering">Kerupuk</span>
+                                <span class="badge badge-tumisan">Tumis Kangkung</span>
+                                <span class="badge badge-sayuran-berkuah">Sayur Kuah</span>
+                                <span class="badge badge-sambal">Sambal</span>
+                                <span class="badge badge-buah">Buah Segar</span>
+                              </div>
+                            </td>
+                            <td class="text-center">40</td>
+                            <td class="text-center remark-cell">
+                              <div class="remark-content" style="max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                                Perlu ekstra kerupuk.
+                              </div>
+                            </td>
+                            <td class="text-center">
+                              <button class="btn btn-sm btn-info" onclick="edit_menu_harian(this)">
+                                <i class="fas fa-edit"></i>
+                              </button>
+                              <button class="btn btn-sm btn-danger" onclick="hapus_menu_harian(this)">
+                                <i class="fas fa-trash"></i>
+                              </button>
+                            </td>
+                          </tr>
+                          <tr>
+                            <td class="text-center">4</td>
+                            <td>
+                              <div class="fw-semibold">04-01-2023</div>
+                              <div class="text-muted small">Jam Input: 07:45</div>
+                            </td>
+                            <td class="text-center">Pagi</td>
+                            <td>Customer D</td>
+                            <td>Kantin 1</td>
+                            <td class="text-center">Pendamping</td>
+                            <td>Menu Biasa</td>
+                            <td>
+                              <div class="kantin-list">
+                                <span class="badge badge-nasi">Nasi</span>
+                                <span class="badge badge-pendamping-kering">Kerupuk</span>
+                                <span class="badge badge-sambal">Sambal</span>
+                              </div>
+                            </td>
+                            <td class="text-center">20</td>
+                            <td class="text-center remark-cell">
+                              <div class="remark-content" style="max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                                Tidak ada sambal.
+                              </div>
+                            </td>
+                            <td class="text-center">
+                              <button class="btn btn-sm btn-info" onclick="edit_menu_harian(this)">
+                                <i class="fas fa-edit"></i>
+                              </button>
+                              <button class="btn btn-sm btn-danger" onclick="hapus_menu_harian(this)">
+                                <i class="fas fa-trash"></i>
+                              </button>
+                            </td>
+                          </tr>
+                          <tr>
+                            <td class="text-center">5</td>
+                            <td>
+                              <div class="fw-semibold">05-01-2023</div>
+                              <div class="text-muted small">Jam Input: 10:30</div>
+                            </td>
+                            <td class="text-center">Siang</td>
+                            <td>Customer E</td>
+                            <td>Kantin 2</td>
+                            <td class="text-center">Utama</td>
+                            <td>Menu Spesial</td>
+                            <td>
+                              <div class="kantin-list">
+                                <span class="badge badge-nasi">Nasi</span>
+                                <span class="badge badge-lauk-utama">Ayam Penyet</span>
+                                <span class="badge badge-pendamping-basah">Sop</span>
+                                <span class="badge badge-pendamping-kering">Kerupuk</span>
+                                <span class="badge badge-tumisan">Sayur Tumis</span>
+                                <span class="badge badge-sayuran-berkuah">Sayur Kuah</span>
+                                <span class="badge badge-sambal">Sambal</span>
+                                <span class="badge badge-buah">Buah Segar</span>
+                              </div>
+                            </td>
+                            <td class="text-center">60</td>
+                            <td class="text-center remark-cell">
+                              <div class="remark-content" style="max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                                Siang hari, jangan lupa bawa payung!
+                              </div>
+                            </td>
+                            <td class="text-center">
+                              <button class="btn btn-sm btn-info" onclick="edit_menu_harian(this)">
+                                <i class="fas fa-edit"></i>
+                              </button>
+                              <button class="btn btn-sm btn-danger" onclick="hapus_menu_harian(this)">
+                                <i class="fas fa-trash"></i>
+                              </button>
+                            </td>
+                          </tr>
                         </tbody>
                       </table>
                     </div>
@@ -590,9 +770,12 @@
   <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
   <script src="<?php echo base_url('assets_back/libs/datatables.net/js/jquery.dataTables.min.js'); ?>"></script>
   <script src="<?php echo base_url('assets_back/libs/datatables.net-bs4/js/dataTables.bootstrap4.min.js'); ?>"></script>
-  <script src="<?php echo base_url('assets_back/js/app.js'); ?>"></script>
-  <?php $this->load->view('back/menu_harian/V_Menu_Harian_js'); ?>
 
+  <!-- ✅ WAVES.JS HARUS SEBELUM APP.JS -->
+  <script src="https://cdn.jsdelivr.net/npm/node-waves@0.7.6/dist/waves.min.js"></script>
+  <script src="<?php echo base_url('assets_back/js/app.js'); ?>"></script>
+
+  <?php $this->load->view('back/menu_harian/V_Menu_Harian_js'); ?>
 </body>
 
 </html>

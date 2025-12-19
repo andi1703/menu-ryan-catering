@@ -82,14 +82,17 @@ class Back_Menu extends CI_Controller
       }
 
       $categories = $this->M_Menu->get_all_categories();
-      $thematik = $this->M_Menu->get_all_thematik(); // Changed from countries
+      $thematik = $this->M_Menu->get_all_thematik();
+      $bahan = $this->M_Menu->get_all_bahan();
 
       echo json_encode([
         'status' => 'success',
         'categories' => $categories,
-        'thematik' => $thematik, // Changed from countries
+        'thematik' => $thematik,
+        'bahan' => $bahan,
         'categories_count' => count($categories),
-        'thematik_count' => count($thematik) // Changed from countries_count
+        'thematik_count' => count($thematik),
+        'bahan_count' => count($bahan)
       ]);
     } catch (Exception $e) {
       log_message('error', 'Back_Menu/get_dropdown_data error: ' . $e->getMessage());
@@ -128,14 +131,26 @@ class Back_Menu extends CI_Controller
     }
 
     $status_aktif = $this->input->post('status_aktif');
-    $menu_harga = $this->input->post('menu_harga'); // Ambil harga dari form
+    $bahan_utama_input = $this->input->post('id_bahan_utama');
+    $bahan_utama_ids = [];
+    if (is_array($bahan_utama_input)) {
+      foreach ($bahan_utama_input as $value) {
+        $id_bahan = (int)$value;
+        if ($id_bahan > 0) {
+          $bahan_utama_ids[] = $id_bahan;
+        }
+      }
+    } elseif (!empty($bahan_utama_input)) {
+      $bahan_utama_ids[] = (int)$bahan_utama_input;
+    }
+
+    $this->db->trans_start();
 
     $data_menu = [
       'menu_nama'     => $menu_nama,
       'id_kategori'   => $this->input->post('id_kategori'),
-      'id_thematik'   => $this->input->post('id_thematik'), // Changed from id_negara
+      'id_thematik'   => $this->input->post('id_thematik'),
       'menu_deskripsi' => $this->input->post('menu_deskripsi'),
-      'menu_harga'    => $menu_harga, // Tambahkan ini
       'status_aktif'  => $status_aktif
     ];
 
@@ -161,24 +176,54 @@ class Back_Menu extends CI_Controller
 
     // Save data
     if ($stat == 'new') {
-      $result = $this->M_Menu->insert_menu($data_menu);
+      $menu_id = $this->M_Menu->insert_menu($data_menu);
+      if (!$menu_id) {
+        $this->db->trans_rollback();
+        echo json_encode([
+          'status' => 'error',
+          'message' => 'Gagal menyimpan data!'
+        ]);
+        return;
+      }
       $message = 'Menu berhasil ditambahkan!';
     } else {
-      $result = $this->M_Menu->update_menu($id, $data_menu);
+      $menu_id = (int)$id;
+      $result = $this->M_Menu->update_menu($menu_id, $data_menu);
+      if (!$result) {
+        $this->db->trans_rollback();
+        echo json_encode([
+          'status' => 'error',
+          'message' => 'Gagal menyimpan data!'
+        ]);
+        return;
+      }
       $message = 'Menu berhasil diperbarui!';
     }
 
-    if ($result) {
-      echo json_encode([
-        'status' => 'success',
-        'message' => $message
-      ]);
-    } else {
+    $syncResult = $this->M_Menu->sync_menu_bahan($menu_id, $bahan_utama_ids);
+    if ($syncResult === false) {
+      $this->db->trans_rollback();
       echo json_encode([
         'status' => 'error',
-        'message' => 'Gagal menyimpan data!'
+        'message' => 'Gagal menyimpan bahan utama menu!'
       ]);
+      return;
     }
+
+    $this->db->trans_complete();
+
+    if ($this->db->trans_status() === false) {
+      echo json_encode([
+        'status' => 'error',
+        'message' => 'Transaksi penyimpanan gagal!'
+      ]);
+      return;
+    }
+
+    echo json_encode([
+      'status' => 'success',
+      'message' => $message
+    ]);
   }
   public function edit_data()
   {
