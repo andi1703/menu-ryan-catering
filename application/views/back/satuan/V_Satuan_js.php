@@ -101,12 +101,14 @@
       <td class="text-center">${no}</td>
       <td>${escapeHtml(item.nama_satuan)}</td>
       <td class="text-center">
-        <button class="btn btn-warning btn-sm btn-edit" data-id="${item.id_satuan}" type="button">
-          <i class="fas fa-edit"></i> Edit
-        </button>
-        <button class="btn btn-danger btn-sm btn-delete" data-id="${item.id_satuan}" type="button">
-          <i class="fas fa-trash"></i> Hapus
-        </button>
+        <div class="btn-group btn-group-sm" role="group">
+          <button class="btn btn-warning btn-edit" data-id="${item.id_satuan}" type="button" title="Edit">
+            <i class="fas fa-edit text-white"></i>
+          </button>
+          <button class="btn btn-danger btn-delete" data-id="${item.id_satuan}" type="button" title="Hapus">
+            <i class="fas fa-trash"></i>
+          </button>
+        </div>
       </td>
     </tr>
   `;
@@ -132,19 +134,64 @@
     function initDataTable() {
       if ($.fn.DataTable) {
         $('#datatable').DataTable({
-          responsive: true,
+          responsive: false,
           autoWidth: false,
-          order: [],
+          scrollX: true,
+          scrollCollapse: true,
+          order: [
+            [1, 'asc']
+          ],
+          columnDefs: [{
+              targets: [0, 2],
+              orderable: false,
+              searchable: false
+            },
+            {
+              targets: 0,
+              width: '60px',
+              className: 'text-center'
+            },
+            {
+              targets: 1,
+              width: 'auto'
+            },
+            {
+              targets: 2,
+              width: '160px',
+              className: 'text-center'
+            }
+          ],
           language: {
             search: 'Cari:',
             lengthMenu: 'Tampilkan _MENU_ data per halaman',
             zeroRecords: 'Tidak ada data yang ditemukan',
             info: 'Menampilkan halaman _PAGE_ dari _PAGES_',
             infoEmpty: 'Tidak ada data tersedia',
+            infoFiltered: '(difilter dari _MAX_ total data)',
             paginate: {
+              first: 'Pertama',
+              last: 'Terakhir',
               next: 'Selanjutnya',
               previous: 'Sebelumnya'
             }
+          },
+          createdRow: function(row) {
+            $(row).find('td').css({
+              'white-space': 'normal',
+              'word-wrap': 'break-word',
+              'word-break': 'break-word'
+            });
+          },
+          drawCallback: function() {
+            this.api().column(0, {
+              search: 'applied',
+              order: 'applied'
+            }).nodes().each(function(cell, i) {
+              cell.innerHTML = i + 1;
+            });
+          },
+          initComplete: function() {
+            this.api().columns.adjust();
           }
         });
       }

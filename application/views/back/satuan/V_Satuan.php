@@ -15,7 +15,32 @@
   <!-- SWEETALERT2 CSS -->
   <link href="<?php echo base_url('assets_back/libs/sweetalert2/sweetalert2.min.css'); ?>" rel="stylesheet">
   <style>
-    /* Custom CSS jika diperlukan */
+    /* Selaraskan tampilan tabel dengan halaman lain */
+    .table-responsive {
+      width: 100%;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      border-radius: 0.375rem;
+    }
+
+    #datatable {
+      width: 100% !important;
+    }
+
+    .table thead th,
+    .table tbody td {
+      vertical-align: middle;
+    }
+
+    .card {
+      box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, .075);
+      border: 1px solid rgba(0, 0, 0, .125);
+    }
+
+    .card-header {
+      background-color: #fff;
+      border-bottom: 1px solid rgba(0, 0, 0, .125);
+    }
   </style>
 </head>
 
@@ -69,12 +94,12 @@
 
                 <div class="card-body">
                   <div class="table-responsive">
-                    <table id="datatable" class="table table-bordered">
-                      <thead>
+                    <table id="datatable" class="table table-striped table-hover align-middle w-100">
+                      <thead class="table-dark">
                         <tr>
-                          <th>No</th>
+                          <th class="text-center">No</th>
                           <th>Nama Satuan</th>
-                          <th>Aksi</th>
+                          <th class="text-center">Aksi</th>
                         </tr>
                       </thead>
                       <tbody id="show_data_satuan"></tbody>

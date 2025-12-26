@@ -38,8 +38,8 @@
     line-height: 1.7;
   }
 
-  /* Unify title colors */
-  .modal-header .modal-title {
+  /* Unify title colors for preview modal only */
+  #modalPreviewDeskripsi .modal-header .modal-title {
     color: #fff !important;
   }
 
@@ -73,7 +73,7 @@
           <h5 id="previewMenuName" class="mb-3 font-weight-bold"></h5>
         </div>
 
-        <!-- <hr class="my-3"> -->
+        <hr class="my-3">
         <!-- Bahan Utama Section -->
         <div class="mb-4" id="bahanUtamaSection" style="display:none;">
           <h6 class="text-muted mb-2">Bahan Utama:</h6>

@@ -365,8 +365,7 @@
                           <th>Kategori</th>
                           <th>Thematik</th>
                           <th>Bahan Utama</th>
-                          <th>Deskripsi</th>
-                          <th class="text-center">Status</th>
+                          <th>Deskripsi Resep</th>
                           <th class="text-center">Aksi</th>
                         </tr>
                       </thead>

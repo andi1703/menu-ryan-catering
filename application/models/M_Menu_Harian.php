@@ -48,7 +48,7 @@ class M_Menu_Harian extends CI_Model
 
   public function get_all_kondimen($id_menu_harian)
   {
-    $this->db->select('mhk.*, m.menu_nama as nama_kondimen, km.nama_kategori as kategori_kondimen');
+    $this->db->select('mhk.*, m.menu_nama as nama_kondimen, m.menu_nama AS menu_menu_nama, km.nama_kategori as kategori_kondimen, km.nama_kategori AS menu_kategori_nama');
     $this->db->from($this->table_kondimen . ' mhk');
     $this->db->join('menu m', 'mhk.id_komponen = m.id_komponen', 'left');
     $this->db->join('kategori_menu km', 'm.id_kategori = km.id_kategori', 'left');
@@ -57,23 +57,29 @@ class M_Menu_Harian extends CI_Model
 
     // ✅ FALLBACK JIKA JOIN GAGAL
     foreach ($result as &$row) {
-      if (empty($row['nama_kondimen'])) {
-        // Ambil langsung dari tabel menu
-        $this->db->select('menu_nama, id_kategori');
-        $this->db->where('id_komponen', $row['id_komponen']);
-        $menu_data = $this->db->get('menu')->row_array();
-
-        if ($menu_data) {
-          $row['nama_kondimen'] = $menu_data['menu_nama'];
-
-          // Ambil nama kategori
-          if ($menu_data['id_kategori']) {
-            $this->db->select('nama_kategori');
-            $this->db->where('id_kategori', $menu_data['id_kategori']);
-            $kategori_data = $this->db->get('kategori_menu')->row_array();
-            $row['kategori_kondimen'] = $kategori_data ? $kategori_data['nama_kategori'] : '-';
+      $rawNama = isset($row['nama_kondimen']) ? trim((string)$row['nama_kondimen']) : '';
+      if ($rawNama === '' || $rawNama === '-') {
+        if (!empty($row['menu_menu_nama'])) {
+          $row['nama_kondimen'] = $row['menu_menu_nama'];
+        } else {
+          // Ambil langsung dari tabel menu
+          $this->db->select('menu_nama, id_kategori');
+          $this->db->where('id_komponen', $row['id_komponen']);
+          $menu_data = $this->db->get('menu')->row_array();
+          if ($menu_data) {
+            $row['nama_kondimen'] = $menu_data['menu_nama'];
+            if (!empty($menu_data['id_kategori'])) {
+              $this->db->select('nama_kategori');
+              $this->db->where('id_kategori', $menu_data['id_kategori']);
+              $kategori_data = $this->db->get('kategori_menu')->row_array();
+              $row['kategori_kondimen'] = $kategori_data ? $kategori_data['nama_kategori'] : '-';
+            }
           }
         }
+      }
+      // ensure kategori fallback
+      if (empty($row['kategori_kondimen']) && !empty($row['menu_kategori_nama'])) {
+        $row['kategori_kondimen'] = $row['menu_kategori_nama'];
       }
     }
 

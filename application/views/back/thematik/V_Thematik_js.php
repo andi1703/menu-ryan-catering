@@ -195,23 +195,23 @@
         '<em class="text-muted">Tidak ada deskripsi</em>';
 
       return `
-            <tr>
-                <td class="text-center col-no">${no}</td>
-                <td class="col-nama">
-                    <div class="thematic-name">${escapeHtml(item.thematik_nama)}</div>
-                </td>
-                <td class="col-deskripsi">${deskripsi}</td>
-                <td class="text-center col-aksi">
-                    <div class="table-action-buttons">
-                        <button class="btn btn-warning btn-sm btn-edit" data-id="${item.id_thematik}" type="button">
-                            <i class="fas fa-edit"></i> Edit
-                        </button>
-                        <button class="btn btn-danger btn-sm btn-delete" data-id="${item.id_thematik}" type="button">
-                            <i class="fas fa-trash"></i> Hapus
-                        </button>
-                    </div>
-                </td>
-            </tr>
+          <tr>
+            <td class="text-center col-no">${no}</td>
+            <td class="col-nama">
+              <div class="thematic-name">${escapeHtml(item.thematik_nama)}</div>
+            </td>
+            <td class="col-deskripsi">${deskripsi}</td>
+            <td class="text-center col-aksi">
+              <div class="btn-group btn-group-sm" role="group">
+                <button class="btn btn-warning btn-edit" data-id="${item.id_thematik}" type="button" title="Edit">
+                  <i class="fas fa-edit text-white"></i>
+                </button>
+                <button class="btn btn-danger btn-delete" data-id="${item.id_thematik}" type="button" title="Hapus">
+                  <i class="fas fa-trash"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
         `;
     }
 

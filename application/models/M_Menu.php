@@ -11,7 +11,6 @@ class M_Menu extends CI_Model
     $this->db->join('thematik t', 'm.id_thematik = t.id_thematik', 'left');
     $this->db->join('menu_bahan_utama mb', 'mb.menu_id = m.id_komponen', 'left');
     $this->db->join('bahan b', 'mb.bahan_id = b.id_bahan', 'left');
-    $this->db->where('m.status_aktif', 1);
     $this->db->group_by('m.id_komponen');
     $this->db->order_by('m.id_komponen', 'DESC');
 
@@ -69,6 +68,28 @@ class M_Menu extends CI_Model
       $menu['bahan_utama_ids'] = $this->get_menu_bahan_ids($id);
     }
     return $menu;
+  }
+
+  public function get_menu_full_by_id($id)
+  {
+    $this->db->select('m.*, k.nama_kategori, t.thematik_nama, GROUP_CONCAT(DISTINCT b.nama_bahan ORDER BY b.nama_bahan SEPARATOR "||") AS bahan_utama_nama');
+    $this->db->from('menu m');
+    $this->db->join('kategori_menu k', 'm.id_kategori = k.id_kategori', 'left');
+    $this->db->join('thematik t', 'm.id_thematik = t.id_thematik', 'left');
+    $this->db->join('menu_bahan_utama mb', 'mb.menu_id = m.id_komponen', 'left');
+    $this->db->join('bahan b', 'mb.bahan_id = b.id_bahan', 'left');
+    $this->db->where('m.id_komponen', (int)$id);
+    $this->db->group_by('m.id_komponen');
+
+    $row = $this->db->get()->row_array();
+    if ($row) {
+      $row['bahan_utama'] = [];
+      if (!empty($row['bahan_utama_nama'])) {
+        $row['bahan_utama'] = array_filter(explode('||', $row['bahan_utama_nama']));
+      }
+      unset($row['bahan_utama_nama']);
+    }
+    return $row;
   }
 
   public function insert_menu($data)

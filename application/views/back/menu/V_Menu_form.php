@@ -4,7 +4,7 @@
     <div class="modal-content">
       <form id="form-data" method="POST" enctype="multipart/form-data" action="<?= base_url('menu/simpan') ?>">
         <div class="modal-header">
-          <h5 class="modal-title" id="modalMenuLabel">Tambah Menu</h5>
+          <h5 class="modal-title text-dark" id="modalMenuLabel">Tambah Menu Kondimen</h5>
           <button type="button" class="close" data-dismiss="modal" aria-label="Close">
             <span aria-hidden="true">&times;</span>
           </button>
@@ -65,20 +65,11 @@
                 <small class="form-text text-muted">Pilih satu atau beberapa bahan utama. Gunakan kolom search untuk mempercepat.</small>
               </div>
             </div>
-            <div class="col-md-6">
-              <div class="form-group">
-                <label for="status_aktif">Status</label>
-                <select name="status_aktif" id="status_aktif" class="form-control">
-                  <option value="1">Aktif</option>
-                  <option value="0">Tidak Aktif</option>
-                </select>
-              </div>
-            </div>
             <div class="col-md-12">
               <div class="form-group">
                 <label for="menu_deskripsi">Deskripsi / Resep / Cara Membuat</label>
-                <textarea name="menu_deskripsi" id="menu_deskripsi" class="form-control" rows="8" placeholder="Masukkan deskripsi menu, resep lengkap, dan cara pembuatan...&#10;&#10;Contoh:&#10;Bahan-bahan:&#10;- Nasi putih 200gr&#10;- Ayam 100gr&#10;- Bumbu...&#10;&#10;Cara Membuat:&#10;1. Tumis bumbu hingga harum&#10;2. Masukkan ayam..." style="font-family: monospace; font-size: 13px;"></textarea>
-                <small class="form-text text-muted">Anda dapat menuliskan resep lengkap, bahan-bahan, dan cara pembuatan menu secara detail di sini.</small>
+                <textarea name="menu_deskripsi" id="menu_deskripsi" class="form-control" rows="8" placeholder="Masukkan deskripsi menu, resep lengkap, dan cara pembuatan...&#10;&#10;Contoh:&#10;Bahan-bahan Resep:&#10;- Nasi putih 200gr&#10;- Ayam 100gr&#10;- Bumbu...&#10;&#10;Cara Membuat:&#10;1. Tumis bumbu hingga harum&#10;2. Masukkan ayam..." style="font-family: monospace; font-size: 13px;"></textarea>
+                <small class="form-text text-muted">Anda dapat menuliskan resep lengkap, bahan-bahan resep, dan cara pembuatan menu secara detail di sini.</small>
               </div>
             </div>
             <div class="col-md-12">

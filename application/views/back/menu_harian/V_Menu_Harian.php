@@ -558,7 +558,7 @@
                             <th class="text-center" width="7%">Jenis Menu</th>
                             <th width="10%">Nama Menu</th>
                             <th width="18%">Kondimen Menu</th>
-                            <th class="text-center" width="5%">Total Order</th>
+                            <th class="text-center" width="7%">Total Order</th>
                             <th class="text-center remark-cell" width="22%">Remark</th>
                             <th class="text-center" width="4%">Aksi</th>
                           </tr>

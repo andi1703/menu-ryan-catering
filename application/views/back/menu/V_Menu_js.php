@@ -194,21 +194,28 @@
       var escapedName = escapeHtml(item.menu_nama).replace(/'/g, '\\&#039;').replace(/"/g, '&quot;');
       var imageParam = item.menu_gambar ? encodeURIComponent(item.menu_gambar) : '';
       var bahanUtamaParam = '';
+      // Siapkan parameter bahan utama untuk modal: dukung array atau single string
       if (Array.isArray(item.bahan_utama) && item.bahan_utama.length > 0) {
         bahanUtamaParam = encodeURIComponent(JSON.stringify(item.bahan_utama));
+      } else if (item.nama_bahan_utama) {
+        bahanUtamaParam = encodeURIComponent(JSON.stringify([item.nama_bahan_utama]));
       }
 
+      // Escape deskripsi bila ada, kosongkan jika tidak
+      var escapedDesc = '';
       if (item.menu_deskripsi && item.menu_deskripsi.trim() !== '') {
         var shortDesc = item.menu_deskripsi.length > 50 ? item.menu_deskripsi.substring(0, 50) + '...' : item.menu_deskripsi;
-        var escapedDesc = escapeHtml(item.menu_deskripsi).replace(/'/g, '\\&#039;').replace(/"/g, '&quot;').replace(/\n/g, '\\n').replace(/\r/g, '\\r');
-
+        escapedDesc = escapeHtml(item.menu_deskripsi).replace(/'/g, '\\&#039;').replace(/"/g, '&quot;').replace(/\n/g, '\\n').replace(/\r/g, '\\r');
         deskripsi = `<small class="text-muted">${escapeHtml(shortDesc)}</small>`;
+      }
+
+      // Tampilkan tombol preview jika ada deskripsi ATAU ada bahan utama
+      var hasBahanUtama = (Array.isArray(item.bahan_utama) && item.bahan_utama.length > 0) || !!item.nama_bahan_utama;
+      if ((item.menu_deskripsi && item.menu_deskripsi.trim() !== '') || hasBahanUtama) {
         deskripsiButtonHtml = `<button type="button" class="btn btn-sm btn-info btn-view-desc" onclick="viewDeskripsi('${item.id_komponen}', '${escapedName}', '${escapedDesc}', '${imageParam}', '${bahanUtamaParam}')" title="Lihat Deskripsi Lengkap"><i class="ri-eye-line"></i></button>`;
       }
 
-      var statusClass = item.status_aktif == 1 ? 'badge bg-success' : 'badge bg-secondary';
-      var statusText = item.status_aktif == 1 ? 'Aktif' : 'Tidak Aktif';
-      var statusHtml = `<span class="${statusClass}">${statusText}</span>`;
+      // Status removed from UI
 
 
       return `
@@ -220,10 +227,12 @@
           <td>${thematik}</td>
           <td>${bahanUtama}</td>
           <td>${deskripsi}</td>
-          <td class="text-center">${statusHtml}</td>
           <td class="text-center">
             <div class="btn-group btn-group-sm" role="group">
               ${deskripsiButtonHtml}
+              <a class="btn btn-secondary" href="${base_url}Back_Menu/print_pdf/${item.id_komponen}" target="_blank" title="Print PDF">
+                <i class="ri-printer-line"></i>
+              </a>
               <button class="btn btn-warning btn-edit" data-id="${item.id_komponen}" type="button" title="Edit">
                 <i class="fas fa-edit"></i>
               </button>
@@ -240,7 +249,7 @@
     function buildEmptyRow() {
       return `
         <tr>
-          <td colspan="9" class="text-center text-muted py-3">
+          <td colspan="8" class="text-center text-muted py-3">
             <i class="fas fa-utensils fa-2x mb-2"></i>
             <div>Tidak ada data menu</div>
           </td>
@@ -529,7 +538,7 @@
 
     window.tambah_data = function() {
       $('#form-modal-menu-form').modal('show');
-      $('#modalMenuLabel').text('Tambah Menu');
+      $('#modalMenuLabel').text('Tambah Menu Kondimen');
       $('#stat').val('new');
       $('#id').val('');
       $('#id_komponen').val('');
@@ -538,7 +547,7 @@
       $('#id_kategori').val('');
       $('#id_thematik').val('');
       clearBahanUtamaValues();
-      $('#status_aktif').val('1');
+      // status_aktif removed
       $('#menu_gambar').val('');
       $('#image-preview').hide();
       $('#preview-img').attr('src', '');
@@ -573,11 +582,11 @@
               clearBahanUtamaValues();
             }
 
-            $('#status_aktif').val(res.data.status_aktif);
+            // status_aktif removed
             $('#id').val(res.data.id_komponen);
             $('#stat').val('edit');
             $('#form-modal-menu-form').modal('show');
-            $('#modalMenuLabel').text('Edit Menu');
+            $('#modalMenuLabel').text('Edit Menu Kondimen');
             $('#menu_gambar').val('');
             if (res.data.menu_gambar) {
               $('#image-preview').show();
@@ -718,7 +727,13 @@
       decodedDesc = decodedDesc.replace(/\\n/g, '\n').replace(/\\r/g, '\r');
 
       $('#previewMenuName').text(decodedName);
-      $('#previewDeskripsiContent').text(decodedDesc);
+      // Tampilkan peringatan jika deskripsi kosong
+      var $descBox = $('#previewDeskripsiContent');
+      if (decodedDesc && decodedDesc.trim() !== '') {
+        $descBox.removeClass('alert alert-warning').text(decodedDesc);
+      } else {
+        $descBox.addClass('alert alert-warning').html('Tidak ada deskripsi / resep untuk menu ini.');
+      }
 
       // Handle Bahan Utama (tampilkan sebagai teks dipisah koma)
       var decodedBahanUtama = bahanUtama ? decodeURIComponent(bahanUtama) : '';

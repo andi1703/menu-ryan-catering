@@ -52,11 +52,12 @@
       margin: 0;
     }
 
-    /* === LAYOUT UTAMA: 3 KOLOM === */
+    /* === LAYOUT UTAMA: 3 KOLOM (KIRI | SPACER | KANAN) === */
     .layout-grid {
       width: 100%;
       margin-top: 0;
       font-size: 0;
+      /* hilangkan gap inline-block */
       display: block;
     }
 
@@ -68,9 +69,8 @@
       box-sizing: border-box;
     }
 
-    /* Pengaturan Lebar Kolom yang Aman */
     .layout-grid .col-content {
-      width: 49%;
+      width: 48.5%;
     }
 
     .layout-grid .col-spacer {
@@ -84,8 +84,10 @@
       /* Jarak vertikal antar customer */
       border: 1px solid #000;
       background-color: #fff;
+      /* Izinkan pecah halaman agar ruang atas tidak kosong */
       page-break-inside: auto;
       break-inside: auto;
+      display: block;
     }
 
     /* HEADER CUSTOMER */
@@ -122,8 +124,9 @@
       width: 100%;
       margin: 0;
       border-bottom: 1px solid #000;
-      page-break-inside: avoid;
-      break-inside: avoid;
+      /* Izinkan pecah halaman agar sisa ruang bisa terpakai */
+      page-break-inside: auto;
+      break-inside: auto;
     }
 
     .menu-box:last-child {
@@ -319,60 +322,57 @@
     <?php if (!empty($groupedByCustomer)) : ?>
 
       <?php
-      // === LOGIKA SPLIT DATA ===
-      // Membagi data menjadi array Kiri dan Kanan
+      // === LOGIKA DISTRIBUSI KE GRID KIRI-KANAN ===
+      // Susun item, lalu distribusikan ke kolom kiri/kanan berdasarkan estimasi tinggi
       $isSingleCustomer = (count($groupedByCustomer) == 1);
 
-      $leftContent = [];
-      $rightContent = [];
+      $allItems = [];
 
       if ($isSingleCustomer) {
-        // MODE 1 CUSTOMER: SPLIT MENU DIA SENDIRI
+        // MODE 1 CUSTOMER: tampilkan header penuh dan semua menu berurutan
         $cust = reset($groupedByCustomer);
         $menus = normalizeMenus($cust['menu_data']);
 
-        // Header Customer Full Width
+        // Header Customer Full Width (di luar kolom agar terlihat sebagai judul)
         echo '<div style="margin-top:0; margin-bottom:2px; background:#007bff; color:#fff; padding:3px 5px; font-weight:bold; font-size:9pt; text-transform:uppercase; border:1px solid #000;">' . htmlspecialchars($cust['customer_name']) . '</div>';
 
-        $counter = 0;
         foreach ($menus as $m) {
-          $item = [
+          $allItems[] = [
             'type' => 'menu_only',
             'menu_data' => $m,
             'kantins' => $cust['kantins'],
             'customer_name' => $cust['customer_name']
           ];
-
-          if ($counter % 2 == 0) $leftContent[] = $item;
-          else $rightContent[] = $item;
-          $counter++;
         }
       } else {
-        // MODE BANYAK CUSTOMER: SPLIT PER CUSTOMER
-        $counter = 0;
+        // MODE BANYAK CUSTOMER: pecah per customer menjadi header + menu agar bisa dibagi ke dua kolom
         foreach ($groupedByCustomer as $c) {
-          $item = ['type' => 'customer_full', 'data' => $c];
-
-          if ($counter % 2 == 0) $leftContent[] = $item;
-          else $rightContent[] = $item;
-          $counter++;
+          // header sebagai item tersendiri
+          $allItems[] = ['type' => 'customer_header', 'data' => $c];
+          $menus = normalizeMenus(isset($c['menu_data']) ? $c['menu_data'] : []);
+          foreach ($menus as $m) {
+            $allItems[] = [
+              'type' => 'menu_only',
+              'menu_data' => $m,
+              'kantins' => $c['kantins'],
+              'customer_name' => $c['customer_name']
+            ];
+          }
         }
       }
+
+      // Distribusikan ke dua kolom dengan menjaga urutan agar header dekat dengan menu
+      list($leftContent, $rightContent) = distributeToColumns($allItems, true);
       ?>
 
-      <!-- STRUKTUR LAYOUT UTAMA 3 KOLOM -->
+      <!-- STRUKTUR LAYOUT GRID KIRI | SPACER | KANAN -->
       <div class="layout-grid">
-        <!-- KOLOM KIRI (49%) -->
         <div class="grid-col col-content">
           <?php foreach ($leftContent as $item) {
             renderItem($item);
           } ?>
         </div>
-
-        <!-- KOLOM TENGAH / SPACER (2%) -->
         <div class="grid-col col-spacer"></div>
-
-        <!-- KOLOM KANAN (49%) -->
         <div class="grid-col col-content">
           <?php foreach ($rightContent as $item) {
             renderItem($item);
@@ -419,6 +419,59 @@ function normalizeMenus($menuData)
   return array_values($menus);
 }
 
+/**
+ * Estimasi ketinggian item untuk pembagian kolom yang lebih rapi.
+ */
+function estimateItemHeight($item)
+{
+  $base = 6;
+  if ($item['type'] === 'customer_full') {
+    $c = $item['data'];
+    $menus = normalizeMenus(isset($c['menu_data']) ? $c['menu_data'] : []);
+    $size = $base;
+    foreach ($menus as $m) {
+      $rows = isset($m['kondimen_list']) && is_array($m['kondimen_list']) ? count($m['kondimen_list']) : 1;
+      $size += 3 + $rows;
+    }
+    return $size;
+  }
+  if ($item['type'] === 'customer_header') {
+    return 6; // header block saja
+  }
+  // menu_only
+  $rows = isset($item['menu_data']['kondimen_list']) && is_array($item['menu_data']['kondimen_list']) ? count($item['menu_data']['kondimen_list']) : 1;
+  return $base + 3 + $rows;
+}
+
+/**
+ * Distribusi item ke dua kolom dengan pendekatan greedy min-height.
+ */
+function distributeToColumns($items, $preserveOrder = false)
+{
+  if (!$preserveOrder) {
+    // First Fit Decreasing untuk packing lebih rapat
+    usort($items, function ($a, $b) {
+      return estimateItemHeight($b) <=> estimateItemHeight($a);
+    });
+  }
+
+  $left = [];
+  $right = [];
+  $hL = 0;
+  $hR = 0;
+  foreach ($items as $it) {
+    $h = estimateItemHeight($it);
+    if ($hL <= $hR) {
+      $left[] = $it;
+      $hL += $h;
+    } else {
+      $right[] = $it;
+      $hR += $h;
+    }
+  }
+  return [$left, $right];
+}
+
 function renderItem($item)
 {
   if ($item['type'] === 'customer_full') {
@@ -434,6 +487,16 @@ function renderItem($item)
         <?php foreach ($menus as $m) {
           renderMenuTable($m, $c['kantins'], $c['customer_name']);
         } ?>
+      </div>
+    </div>
+  <?php
+  } elseif ($item['type'] === 'customer_header') {
+    $c = $item['data'];
+  ?>
+    <div class="item-wrapper">
+      <div class="customer-header-block">
+        <span><?= htmlspecialchars($c['customer_name']) ?></span>
+        <span class="total-order-badge">Total Order: <?= isset($c['grand_total_order']) ? (int)$c['grand_total_order'] : 0 ?></span>
       </div>
     </div>
   <?php

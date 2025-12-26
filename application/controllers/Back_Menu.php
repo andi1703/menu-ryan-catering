@@ -130,7 +130,6 @@ class Back_Menu extends CI_Controller
       return;
     }
 
-    $status_aktif = $this->input->post('status_aktif');
     $bahan_utama_input = $this->input->post('id_bahan_utama');
     $bahan_utama_ids = [];
     if (is_array($bahan_utama_input)) {
@@ -150,8 +149,7 @@ class Back_Menu extends CI_Controller
       'menu_nama'     => $menu_nama,
       'id_kategori'   => $this->input->post('id_kategori'),
       'id_thematik'   => $this->input->post('id_thematik'),
-      'menu_deskripsi' => $this->input->post('menu_deskripsi'),
-      'status_aktif'  => $status_aktif
+      'menu_deskripsi' => $this->input->post('menu_deskripsi')
     ];
 
     // Handle image upload
@@ -258,26 +256,6 @@ class Back_Menu extends CI_Controller
     }
   }
 
-  public function toggle_status()
-  {
-    header('Content-Type: application/json');
-    $id = $this->input->post('id');
-    $status = $this->input->post('status');
-    $data = ['status_aktif' => $status];
-    $result = $this->M_Menu->update_menu($id, $data);
-    if ($result) {
-      $message = $status == 1 ? 'Menu berhasil diaktifkan!' : 'Menu berhasil dinonaktifkan!';
-      echo json_encode([
-        'status' => 'success',
-        'message' => $message
-      ]);
-    } else {
-      echo json_encode([
-        'status' => 'error',
-        'message' => 'Gagal mengubah status!'
-      ]);
-    }
-  }
 
   // Debug methods
   public function debug_menu_thematik()
@@ -318,7 +296,6 @@ class Back_Menu extends CI_Controller
               FROM menu m 
               LEFT JOIN kategori_menu k ON m.id_kategori = k.id_kategori 
               LEFT JOIN thematik t ON m.id_thematik = t.id_thematik 
-              WHERE m.status_aktif = 1 
               ORDER BY m.id_komponen DESC 
               LIMIT 5";
 
@@ -336,5 +313,40 @@ class Back_Menu extends CI_Controller
         'message' => $e->getMessage()
       ]);
     }
+  }
+
+  public function print_pdf($id)
+  {
+    // Ensure local timezone for correct print timestamp
+    if (function_exists('date_default_timezone_set')) {
+      @date_default_timezone_set('Asia/Jakarta');
+    }
+    $id = (int)$id;
+    $menu = $this->M_Menu->get_menu_full_by_id($id);
+    if (!$menu) {
+      show_404();
+      return;
+    }
+
+    // Prepare HTML from view
+    $data = [
+      'menu' => $menu,
+      'base_url' => base_url()
+    ];
+    $html = $this->load->view('back/menu/V_Menu_Pdf', $data, true);
+
+    // Use Dompdf to render PDF
+    if (!class_exists('Dompdf\\Dompdf')) {
+      require_once FCPATH . 'vendor/autoload.php';
+    }
+    $options = new Dompdf\Options();
+    $options->set('isRemoteEnabled', true);
+    $dompdf = new Dompdf\Dompdf($options);
+    $dompdf->loadHtml($html);
+    $dompdf->setPaper('A4', 'portrait');
+    $dompdf->render();
+
+    $filename = 'Menu-' . preg_replace('/[^A-Za-z0-9_-]+/', '-', $menu['menu_nama']) . '.pdf';
+    $dompdf->stream($filename, ['Attachment' => false]);
   }
 }

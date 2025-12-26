@@ -15,7 +15,32 @@
   <!-- SWEETALERT2 CSS -->
   <link href="<?php echo base_url('assets_back/libs/sweetalert2/sweetalert2.min.css'); ?>" rel="stylesheet">
   <style>
-    /* Custom CSS jika diperlukan */
+    /* Selaraskan tampilan tabel dengan Kategori Menu */
+    .table-responsive {
+      width: 100%;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      border-radius: 0.375rem;
+    }
+
+    #datatable {
+      width: 100% !important;
+    }
+
+    .table thead th,
+    .table tbody td {
+      vertical-align: middle;
+    }
+
+    .card {
+      box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, .075);
+      border: 1px solid rgba(0, 0, 0, .125);
+    }
+
+    .card-header {
+      background-color: #fff;
+      border-bottom: 1px solid rgba(0, 0, 0, .125);
+    }
   </style>
 </head>
 
@@ -68,18 +93,18 @@
 
                 <div class="card-body">
                   <div class="table-responsive">
-                    <table id="datatable" class="table table-bordered">
-                      <thead>
+                    <table id="datatable" class="table table-striped table-hover align-middle w-100">
+                      <thead class="table-dark">
                         <tr>
-                          <th style="width:50px;">No</th>
-                          <th style="width:100px;">Gambar</th>
-                          <th style="width:200px;">Nama Customer</th>
-                          <th style="width:100px;">No HP</th>
-                          <th style="width:200px;">Email</th>
-                          <th style="width:400px;">Alamat</th>
-                          <th style="width:120px;">Harga Makan</th> <!-- Tambahkan kolom ini -->
-                          <th style="width:120px;">Food Cost Max</th> <!-- Tambahkan kolom ini -->
-                          <th>Aksi</th>
+                          <th class="text-center">No</th>
+                          <th class="text-center">Gambar</th>
+                          <th>Nama Customer</th>
+                          <th>No HP</th>
+                          <th>Email</th>
+                          <th>Alamat</th>
+                          <th class="text-center">Harga Makan</th>
+                          <th class="text-center">Food Cost Max</th>
+                          <th class="text-center">Aksi</th>
                         </tr>
                       </thead>
                       <tbody id="show_data_customer"></tbody>

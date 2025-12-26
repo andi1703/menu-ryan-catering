@@ -205,8 +205,8 @@
 			<td>${deskripsi}</td>
 			<td class="text-center">
 				<div class="btn-group btn-group-sm" role="group">
-					<button class="btn btn-warning btn-edit" data-id="${item.id_kategori}" type="button" title="Edit">
-						<i class="fas fa-edit"></i>
+						<button class="btn btn-warning btn-edit" data-id="${item.id_kategori}" type="button" title="Edit">
+							<i class="fas fa-edit text-white"></i>
 					</button>
 					<button class="btn btn-danger btn-delete" data-id="${item.id_kategori}" type="button" title="Hapus">
 						<i class="fas fa-trash"></i>

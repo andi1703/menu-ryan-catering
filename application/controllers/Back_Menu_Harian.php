@@ -358,10 +358,10 @@ class Back_Menu_Harian extends CI_Controller
    */
   public function get_menu_list()
   {
-    // ✅ PERBAIKAN: Hapus duplikasi query
+    // ✅ Ambil daftar menu/komponen untuk dipilih sebagai kondimen
     $this->db->select('id_komponen, menu_nama');
     $this->db->from('menu');
-    $this->db->where('status_aktif', 1); // Hanya menu aktif
+    // Status_aktif telah dihapus dari skema, jangan filter di sini
     $data = $this->db->get()->result_array();
 
     echo json_encode($data);

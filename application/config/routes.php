@@ -161,3 +161,19 @@ $route['menu-harian-report/generate_excel'] = 'Back_Menu_Harian_Report/generate_
 
 // ===== DASHBOARD =====
 $route['dashboard'] = 'back_dashboard/index';
+
+// ===== VEGETABLE CALCULATOR =====
+$route['vegetable-calculator']        = 'Back_Vegetable_calculator/index';
+$route['vegetable-calculator/data']   = 'Back_Vegetable_calculator/data';
+$route['vegetable-calculator/table']  = 'Back_Vegetable_calculator/table';
+$route['vegetable-calculator/kondimen']  = 'Back_Vegetable_calculator/kondimen';
+$route['vegetable-calculator/bahan-get'] = 'Back_Vegetable_calculator/bahan_get';
+$route['vegetable-calculator/bahan-save'] = 'Back_Vegetable_calculator/bahan_save';
+$route['vegetable-calculator/sessions'] = 'Back_Vegetable_calculator/sessions';
+$route['vegetable-calculator/session-create'] = 'Back_Vegetable_calculator/session_create';
+$route['vegetable-calculator/session-delete'] = 'Back_Vegetable_calculator/session_delete';
+$route['vegetable-calculator/detail/(:num)'] = 'Back_Vegetable_calculator/detail/$1';
+$route['vegetable-calculator/session-detail'] = 'Back_Vegetable_calculator/session_detail';
+$route['vegetable-calculator/session-update'] = 'Back_Vegetable_calculator/session_update';
+$route['vegetable-calculator/get-bahan-dropdown'] = 'Back_Vegetable_calculator/get_bahan_dropdown';
+$route['translate_uri_dashes']        = TRUE;
