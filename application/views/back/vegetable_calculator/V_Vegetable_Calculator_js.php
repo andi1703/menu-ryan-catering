@@ -361,7 +361,8 @@
                 id_komponen: item.id_komponen,
                 nama_kondimen: item.nama_kondimen,
                 total_order: item.qty_kondimen,
-                yield_porsi: 1
+                yield_porsi: 1,
+                bahan: Array.isArray(item.bahan) ? item.bahan : []
               };
             }));
           }
@@ -404,12 +405,14 @@
     };
 
     $('#btn_open_modal').on('click', function() {
-      // Reset edit mode saat create new
+      // Reset edit mode saat create baru
       editingSessionId = null;
       $('#f_tanggal').val('');
       $('#f_customer').val('');
       $('#f_shift').val('');
+      // Bersihkan isi tabel dan artefak Select2 yang mungkin tertinggal
       $('#calc_excel_body').empty();
+      $('#calcModal .select2-container').remove();
       $('#calcModal').modal('show');
     });
 
@@ -486,7 +489,7 @@
           </tr>`;
         $body.append(row);
 
-        // Prefetch bahan untuk semua kondimen; otomatis buka baris pertama yang punya mapping
+        // Prefetch atau gunakan data bahan yang sudah ada (saat edit)
         const $detailRow = $(`#calc_excel_body tr.bahan-container[data-recipe-id='${id}']`);
         const $list = $detailRow.find('.bahan-list');
         const params = {
@@ -501,14 +504,13 @@
           menuId,
           params
         });
-        $.getJSON(`${BASE_URL}vegetable-calculator/bahan-get`, params).done((res) => {
-          console.log('Bahan response:', res);
-          const rows = (res && res.data) ? res.data : [];
+
+        // Saat ADD (editingSessionId == null) jangan menampilkan data bahan tersimpan dari sesi sebelumnya
+        if (editingSessionId && Array.isArray(c.bahan) && c.bahan.length > 0) {
           $list.empty();
-          rows.forEach(r => {
+          c.bahan.forEach(function(r) {
             const nama = (r.bahan_nama || r.nama_bahan || '').toString();
             const satuan = (r.satuan || r.nama_satuan || '').toString();
-
             const rowHtml = `
               <tr>
                 <td><select class="form-control form-control-sm bahan-dropdown">${generateBahanOptions(nama)}</select></td>
@@ -518,26 +520,48 @@
               </tr>`;
             $list.append(rowHtml);
           });
-
-          // Initialize Select2 after loading data
           initBahanSelect2();
-          if (!firstOpened && rows.length > 0) {
+          if (!firstOpened) {
             $detailRow.show();
             firstOpened = true;
-            // Scroll agar terlihat
             const top = $detailRow.offset() ? $detailRow.offset().top - 120 : null;
             if (top) $(document).scrollTop(top);
           }
-        }).fail((xhr, status, error) => {
-          console.error('Bahan request FAILED:', {
-            xhr,
-            status,
-            error,
-            params,
-            komponenId,
-            nama: nk
+        } else {
+          $.getJSON(`${BASE_URL}vegetable-calculator/bahan-get`, params).done((res) => {
+            console.log('Bahan response:', res);
+            const rows = (res && res.data) ? res.data : [];
+            $list.empty();
+            rows.forEach(r => {
+              const nama = (r.bahan_nama || r.nama_bahan || '').toString();
+              const satuan = (r.satuan || r.nama_satuan || '').toString();
+              const rowHtml = `
+                <tr>
+                  <td><select class="form-control form-control-sm bahan-dropdown">${generateBahanOptions(nama)}</select></td>
+                  <td><input type="number" step="0.01" class="form-control form-control-sm bahan-qty" value="${(r.qty||0)}"></td>
+                  <td><input type="text" class="form-control form-control-sm bahan-satuan" value="${satuan.replace(/\"/g,'&quot;')}" readonly></td>
+                  <td class="text-center"><button class="btn btn-sm btn-outline-danger remove-bahan"><i class="ri-delete-bin-6-line"></i></button></td>
+                </tr>`;
+              $list.append(rowHtml);
+            });
+            initBahanSelect2();
+            if (!firstOpened && rows.length > 0) {
+              $detailRow.show();
+              firstOpened = true;
+              const top = $detailRow.offset() ? $detailRow.offset().top - 120 : null;
+              if (top) $(document).scrollTop(top);
+            }
+          }).fail((xhr, status, error) => {
+            console.error('Bahan request FAILED:', {
+              xhr,
+              status,
+              error,
+              params,
+              komponenId,
+              nama: nk
+            });
           });
-        });
+        }
       });
     }
 
@@ -548,6 +572,13 @@
       const totalOrder = parseInt($(this).closest('tr').find('td:eq(1)').text().replace(/\D/g, '') || 0, 10);
       const batches = Math.ceil(totalOrder / yieldVal);
       $(this).closest('tr').find('.batches-cell').text(number(batches));
+    });
+
+    // Saat modal ditutup secara manual, pastikan state kembali ke ADD mode
+    $('#calcModal').on('hidden.bs.modal', function() {
+      editingSessionId = null;
+      $('#calc_excel_body').empty();
+      $('#calcModal .select2-container').remove();
     });
 
     $(document).on('click', '#calc_excel_body .toggle-bahan', function() {
@@ -747,6 +778,17 @@
     // Populate customer dropdown saat modal dibuka (Bootstrap 4)
     $('#calcModal').on('show.bs.modal', function() {
       console.log('Modal show event fired!');
+
+      // Jika bukan mode edit, pastikan filter & tabel benar-benar kosong
+      if (!editingSessionId) {
+        $('#f_tanggal').val('');
+        $('#f_customer').val('').trigger('change');
+        $('#f_shift').val('').trigger('change');
+        $('#calc_excel_body').empty();
+        $('#calcModal .select2-container').remove();
+        console.log('Reset filters and table for ADD mode');
+      }
+
       const $customer = $('#f_customer');
       console.log('Current customer options:', $customer.children('option').length);
 

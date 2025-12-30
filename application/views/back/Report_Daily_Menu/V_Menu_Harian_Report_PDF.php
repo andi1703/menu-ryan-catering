@@ -52,12 +52,11 @@
       margin: 0;
     }
 
-    /* === LAYOUT UTAMA: 3 KOLOM (KIRI | SPACER | KANAN) === */
+    /* === LAYOUT UTAMA: 3 KOLOM === */
     .layout-grid {
       width: 100%;
       margin-top: 0;
       font-size: 0;
-      /* hilangkan gap inline-block */
       display: block;
     }
 
@@ -69,8 +68,9 @@
       box-sizing: border-box;
     }
 
+    /* Pengaturan Lebar Kolom yang Aman */
     .layout-grid .col-content {
-      width: 48.5%;
+      width: 49%;
     }
 
     .layout-grid .col-spacer {
@@ -84,10 +84,8 @@
       /* Jarak vertikal antar customer */
       border: 1px solid #000;
       background-color: #fff;
-      /* Izinkan pecah halaman agar ruang atas tidak kosong */
       page-break-inside: auto;
       break-inside: auto;
-      display: block;
     }
 
     /* HEADER CUSTOMER */
@@ -124,8 +122,8 @@
       width: 100%;
       margin: 0;
       border-bottom: 1px solid #000;
-      /* Izinkan pecah halaman agar sisa ruang bisa terpakai */
       page-break-inside: auto;
+      /* izinkan pecah jika perlu agar ruang atas terisi */
       break-inside: auto;
     }
 
@@ -298,6 +296,11 @@
       background-color: #444;
       color: #fff;
     }
+
+    /* Hindari pecah di tengah item untuk kerapihan */
+    .item-wrapper {
+      page-break-inside: auto;
+    }
   </style>
 </head>
 
@@ -322,63 +325,50 @@
     <?php if (!empty($groupedByCustomer)) : ?>
 
       <?php
-      // === LOGIKA DISTRIBUSI KE GRID KIRI-KANAN ===
-      // Susun item, lalu distribusikan ke kolom kiri/kanan berdasarkan estimasi tinggi
+      // === LOGIKA PER-HALAMAN, 2 KOLOM ===
       $isSingleCustomer = (count($groupedByCustomer) == 1);
 
       $allItems = [];
 
-      if ($isSingleCustomer) {
-        // MODE 1 CUSTOMER: tampilkan header penuh dan semua menu berurutan
-        $cust = reset($groupedByCustomer);
-        $menus = normalizeMenus($cust['menu_data']);
-
-        // Header Customer Full Width (di luar kolom agar terlihat sebagai judul)
-        echo '<div style="margin-top:0; margin-bottom:2px; background:#007bff; color:#fff; padding:3px 5px; font-weight:bold; font-size:9pt; text-transform:uppercase; border:1px solid #000;">' . htmlspecialchars($cust['customer_name']) . '</div>';
-
+      // SELALU: Flatten menjadi header + item menu untuk packing dua kolom yang rapat
+      foreach ($groupedByCustomer as $c) {
+        // Header biru sekali per customer
+        $allItems[] = [
+          'type' => 'customer_header',
+          'customer_name' => isset($c['customer_name']) ? $c['customer_name'] : '',
+          'grand_total_order' => isset($c['grand_total_order']) ? (int)$c['grand_total_order'] : 0
+        ];
+        // Item menu per customer
+        $menus = normalizeMenus(isset($c['menu_data']) ? $c['menu_data'] : []);
         foreach ($menus as $m) {
           $allItems[] = [
             'type' => 'menu_only',
             'menu_data' => $m,
-            'kantins' => $cust['kantins'],
-            'customer_name' => $cust['customer_name']
+            'kantins' => isset($c['kantins']) ? $c['kantins'] : [],
+            'customer_name' => isset($c['customer_name']) ? $c['customer_name'] : ''
           ];
-        }
-      } else {
-        // MODE BANYAK CUSTOMER: pecah per customer menjadi header + menu agar bisa dibagi ke dua kolom
-        foreach ($groupedByCustomer as $c) {
-          // header sebagai item tersendiri
-          $allItems[] = ['type' => 'customer_header', 'data' => $c];
-          $menus = normalizeMenus(isset($c['menu_data']) ? $c['menu_data'] : []);
-          foreach ($menus as $m) {
-            $allItems[] = [
-              'type' => 'menu_only',
-              'menu_data' => $m,
-              'kantins' => $c['kantins'],
-              'customer_name' => $c['customer_name']
-            ];
-          }
         }
       }
 
-      // Distribusikan ke dua kolom dengan menjaga urutan agar header dekat dengan menu
-      list($leftContent, $rightContent) = distributeToColumns($allItems, true);
+      // Bangun halaman-kolom dengan best-fit agar ruang atas terpakai
+      $pages = buildPageGrids($allItems, 220);
       ?>
 
-      <!-- STRUKTUR LAYOUT GRID KIRI | SPACER | KANAN -->
-      <div class="layout-grid">
-        <div class="grid-col col-content">
-          <?php foreach ($leftContent as $item) {
-            renderItem($item);
-          } ?>
+      <?php foreach ($pages as $pg) : ?>
+        <div class="layout-grid">
+          <div class="grid-col col-content">
+            <?php foreach ($pg['left'] as $item) {
+              renderItem($item);
+            } ?>
+          </div>
+          <div class="grid-col col-spacer"></div>
+          <div class="grid-col col-content">
+            <?php foreach ($pg['right'] as $item) {
+              renderItem($item);
+            } ?>
+          </div>
         </div>
-        <div class="grid-col col-spacer"></div>
-        <div class="grid-col col-content">
-          <?php foreach ($rightContent as $item) {
-            renderItem($item);
-          } ?>
-        </div>
-      </div>
+      <?php endforeach; ?>
 
     <?php else : ?>
       <div class="no-data"><strong>⚠ Tidak Ada Data</strong></div>
@@ -419,9 +409,7 @@ function normalizeMenus($menuData)
   return array_values($menus);
 }
 
-/**
- * Estimasi ketinggian item untuk pembagian kolom yang lebih rapi.
- */
+// Estimasi tinggi item untuk pembagian per halaman
 function estimateItemHeight($item)
 {
   $base = 6;
@@ -436,40 +424,49 @@ function estimateItemHeight($item)
     return $size;
   }
   if ($item['type'] === 'customer_header') {
-    return 6; // header block saja
+    // Header biru kecil, cukup tinggi sebagian kecil
+    return 6;
   }
   // menu_only
   $rows = isset($item['menu_data']['kondimen_list']) && is_array($item['menu_data']['kondimen_list']) ? count($item['menu_data']['kondimen_list']) : 1;
   return $base + 3 + $rows;
 }
 
-/**
- * Distribusi item ke dua kolom dengan pendekatan greedy min-height.
- */
-function distributeToColumns($items, $preserveOrder = false)
+// Distribusi ke dua kolom dengan greedy fill untuk mengisi ruang atas
+function buildPageGrids($items, $pageLimit = 220)
 {
-  if (!$preserveOrder) {
-    // First Fit Decreasing untuk packing lebih rapat
-    usort($items, function ($a, $b) {
-      return estimateItemHeight($b) <=> estimateItemHeight($a);
-    });
-  }
-
+  $pages = [];
   $left = [];
   $right = [];
   $hL = 0;
   $hR = 0;
+
   foreach ($items as $it) {
     $h = estimateItemHeight($it);
-    if ($hL <= $hR) {
+
+    // Greedy: isi kolom kiri dulu sampai penuh, baru kanan
+    if ($hL + $h <= $pageLimit) {
       $left[] = $it;
       $hL += $h;
-    } else {
+    } elseif ($hR + $h <= $pageLimit) {
       $right[] = $it;
       $hR += $h;
+    } else {
+      // Kedua kolom penuh, buat halaman baru
+      if (!empty($left) || !empty($right)) {
+        $pages[] = ['left' => $left, 'right' => $right];
+      }
+      $left = [$it];
+      $right = [];
+      $hL = $h;
+      $hR = 0;
     }
   }
-  return [$left, $right];
+
+  if (!empty($left) || !empty($right)) {
+    $pages[] = ['left' => $left, 'right' => $right];
+  }
+  return $pages;
 }
 
 function renderItem($item)
@@ -491,12 +488,11 @@ function renderItem($item)
     </div>
   <?php
   } elseif ($item['type'] === 'customer_header') {
-    $c = $item['data'];
   ?>
     <div class="item-wrapper">
       <div class="customer-header-block">
-        <span><?= htmlspecialchars($c['customer_name']) ?></span>
-        <span class="total-order-badge">Total Order: <?= isset($c['grand_total_order']) ? (int)$c['grand_total_order'] : 0 ?></span>
+        <span><?= htmlspecialchars($item['customer_name']) ?></span>
+        <span class="total-order-badge">Total Order: <?= isset($item['grand_total_order']) ? (int)$item['grand_total_order'] : 0 ?></span>
       </div>
     </div>
   <?php

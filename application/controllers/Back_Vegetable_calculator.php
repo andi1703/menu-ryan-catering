@@ -322,7 +322,13 @@ class Back_Vegetable_calculator extends CI_Controller
 
     // counts
     $totalMenu = (int)$this->db->where_in('id_menu_harian', $menuIds)->from('menu_harian_kondimen')->count_all_results();
-    $totalBahan = count($bahanData);
+    // Hitung total bahan berdasarkan jumlah items di setiap kelompok
+    $totalBahan = 0;
+    foreach ($bahanData as $bd) {
+      if (isset($bd['items']) && is_array($bd['items'])) {
+        $totalBahan += count($bd['items']);
+      }
+    }
 
     // Update session
     $this->db->where('id', $session_id);
@@ -331,8 +337,7 @@ class Back_Vegetable_calculator extends CI_Controller
       'customer_id' => $customer_id,
       'shift' => $shiftNorm,
       'total_menu' => $totalMenu,
-      'total_bahan' => $totalBahan,
-      'updated_at' => date('Y-m-d H:i:s')
+      'total_bahan' => $totalBahan
     ]);
 
     // Delete old menu mappings
