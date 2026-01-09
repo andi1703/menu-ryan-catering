@@ -159,6 +159,10 @@ $route['menu-harian-report'] = 'Back_Menu_Harian_Report/index';
 $route['menu-harian-report/generate_pdf'] = 'Back_Menu_Harian_Report/generate_pdf';
 $route['menu-harian-report/generate_excel'] = 'Back_Menu_Harian_Report/generate_excel';
 
+// ===== REVIEW MENU ROUTES =====
+$route['review-menu'] = 'Back_Review_Menu/index';
+$route['review-menu/get_menu_list'] = 'Back_Review_Menu/get_menu_list';
+
 // ===== DASHBOARD =====
 $route['dashboard'] = 'back_dashboard/index';
 

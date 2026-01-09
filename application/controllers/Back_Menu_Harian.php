@@ -45,6 +45,7 @@ class Back_Menu_Harian extends CI_Controller
           'jenis_menu' => $item['jenis_menu'],
           'nama_menu' => $item['nama_menu'],
           'remark' => $item['remark'],
+          'foto_menu' => $item['foto_menu'] ?? null,
           'ids' => [],
           'kantins' => [],
           'kondimen_data' => [],
@@ -57,6 +58,11 @@ class Back_Menu_Harian extends CI_Controller
       // Tambahkan ID dan kantin
       $grouped[$key]['ids'][] = $item['id_menu_harian'];
       $grouped[$key]['kantins'][] = $item['nama_kantin'];
+
+      // Preserve foto_menu jika belum ada
+      if (empty($grouped[$key]['foto_menu']) && !empty($item['foto_menu'])) {
+        $grouped[$key]['foto_menu'] = $item['foto_menu'];
+      }
 
       if (!empty($item['created_at'])) {
         if (empty($grouped[$key]['created_at']) || $item['created_at'] < $grouped[$key]['created_at']) {
@@ -133,6 +139,35 @@ class Back_Menu_Harian extends CI_Controller
   {
     $data = $this->input->post();
 
+    // Handle file upload
+    $foto_menu = '';
+    if (!empty($_FILES['foto_menu']['name'])) {
+      $config['upload_path'] = './file/products/menukondimen/';
+      $config['allowed_types'] = 'jpg|jpeg|png';
+      $config['max_size'] = 2048; // 2MB
+      $config['file_name'] = 'menu_' . time() . '_' . rand(1000, 9999);
+
+      // Create directory if not exists
+      if (!is_dir($config['upload_path'])) {
+        mkdir($config['upload_path'], 0755, true);
+      }
+
+      $this->load->library('upload', $config);
+
+      if ($this->upload->do_upload('foto_menu')) {
+        $upload_data = $this->upload->data();
+        $foto_menu = $upload_data['file_name'];
+      } else {
+        echo json_encode(['status' => 'error', 'msg' => 'Upload foto gagal: ' . $this->upload->display_errors()]);
+        return;
+      }
+    } else {
+      // If no new file uploaded, keep existing foto
+      $foto_menu = $this->input->post('foto_menu_existing');
+    }
+
+    $data['foto_menu'] = $foto_menu;
+
     // ✅ CEK APAKAH INI OPERASI UPDATE ATAU INSERT
     $id_menu_harian = $this->input->post('id_menu_harian');
     $isUpdate = !empty($id_menu_harian);
@@ -176,7 +211,8 @@ class Back_Menu_Harian extends CI_Controller
           'jenis_menu' => $data['jenis_menu'],
           'nama_menu' => $data['nama_menu'],
           'total_orderan_customer' => $total_orderan_customer, // ✅ SESUAIKAN DENGAN NAMA FIELD DB
-          'remark' => $data['remark'] ?? null
+          'remark' => $data['remark'] ?? null,
+          'foto_menu' => $data['foto_menu'] ?? null
         ];
 
         if (!$this->M_Menu_Harian->insert($menu_data)) {
@@ -271,7 +307,8 @@ class Back_Menu_Harian extends CI_Controller
           'jenis_menu' => $data['jenis_menu'],
           'nama_menu' => $data['nama_menu'],
           'total_orderan_customer' => $total_orderan_customer, // ✅ SESUAIKAN DENGAN NAMA FIELD DB
-          'remark' => $data['remark'] ?? null
+          'remark' => $data['remark'] ?? null,
+          'foto_menu' => $data['foto_menu'] ?? null
         ];
 
         if (!$this->M_Menu_Harian->insert($menu_data)) {

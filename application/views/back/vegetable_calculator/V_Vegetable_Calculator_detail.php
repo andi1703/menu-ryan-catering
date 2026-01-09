@@ -215,7 +215,7 @@
                     <table class="table table-bordered table-hover align-middle w-100">
                       <thead class="table-dark">
                         <tr>
-                          <th class="text-center" width="12%">Menu Harian ID</th>
+                          <th class="text-center" width="5%">#</th>
                           <th width="25%">Menu Kondimen</th>
                           <th class="text-center" width="10%">Qty Kondimen</th>
                           <th>Detail Bahan</th>
@@ -266,6 +266,7 @@
       $.getJSON(`${BASE_URL}vegetable-calculator/session-detail`, {
         id: SESSION_ID
       }).done(res => {
+        console.log('Session Detail Response:', res);
         const data = (res && res.data) ? res.data : null;
         if (!data) {
           $('#session_header').html(`
@@ -278,28 +279,39 @@
         }
 
         const s = data.session || {};
+        console.log('Session Data:', s);
+        console.log('menu_harian_id:', s.menu_harian_id);
+        console.log('nama_menu:', s.nama_menu);
         const shiftLower = (s.shift || '').toLowerCase();
         const shiftClass = `shift-${shiftLower}`;
 
         $('#session_header').html(`
-          <div class="col-md-3 info-item">
+          <div class="col-md-2 info-item">
             <div class="info-label">Tanggal</div>
             <div class="info-value"><i class="ri-calendar-line me-1"></i>${s.tanggal || '-'}</div>
           </div>
-          <div class="col-md-3 info-item">
+          <div class="col-md-2 info-item">
             <div class="info-label">Shift</div>
             <div class="info-value"><span class="shift-badge ${shiftClass}">${s.shift || '-'}</span></div>
+          </div>
+          <div class="col-md-1 info-item">
+            <div class="info-label">ID Menu</div>
+            <div class="info-value">${s.menu_harian_id || '-'}</div>
           </div>
           <div class="col-md-2 info-item">
             <div class="info-label">Customer</div>
             <div class="info-value">${s.nama_customer || s.customer_id || '-'}</div>
           </div>
-          <div class="col-md-2 info-item text-center">
-            <div class="info-label">Jumlah Menu</div>
+          <div class="col-md-2 info-item">
+            <div class="info-label">Nama Menu</div>
+            <div class="info-value" style="font-size: 0.9rem;">${s.nama_menu || '-'}</div>
+          </div>
+          <div class="col-md-1 info-item text-center">
+            <div class="info-label">Jml Menu</div>
             <div class="info-value">${number(s.total_menu || 0)}</div>
           </div>
           <div class="col-md-2 info-item text-center">
-            <div class="info-label">Jumlah Bahan</div>
+            <div class="info-label">Jml Bahan</div>
             <div class="info-value">${number(s.total_bahan || 0)}</div>
           </div>
         `);
@@ -345,7 +357,7 @@
 
           const tr = `
             <tr>
-              <td class="text-center">${it.menu_harian_id || '-'}</td>
+              <td class="text-center"><strong>${idx + 1}</strong></td>
               <td><strong>${it.nama_kondimen || '-'}</strong></td>
               <td class="text-center"><span class="badge bg-info">${number(it.qty_kondimen || 0)}</span></td>
               <td>${nested}</td>

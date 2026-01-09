@@ -6,6 +6,7 @@
             $isDashboardActive   = ($current === 'dashboard');
             $isDailyMenuActive   = ($current === 'menu-harian');
             $isDailyReportActive = ($current === 'menu-harian-report');
+            $isReviewMenuActive  = ($current === 'review-menu');
 
             $masterMenuActive     = in_array($current, ['menu', 'kategori-menu', 'thematik']);
             $masterCustomerActive = in_array($current, ['customer', 'kantin']);
@@ -27,6 +28,12 @@
                     <a href="<?php echo base_url('menu-harian'); ?>" class="waves-effect">
                         <i class="fas fa-leaf"></i>
                         <span>Daily Menu</span>
+                    </a>
+                </li>
+                <li class="<?php echo $isReviewMenuActive ? 'mm-active' : ''; ?>">
+                    <a href="<?php echo base_url('review-menu'); ?>" class="waves-effect">
+                        <i class="fas fa-book-open"></i>
+                        <span>Review Menu</span>
                     </a>
                 </li>
 

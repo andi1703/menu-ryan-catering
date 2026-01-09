@@ -180,6 +180,9 @@
       var html = "";
       var no = 1;
 
+      // Debug: cek data yang diterima
+      console.log('Data received in renderMenuHarianTable:', result);
+
       if (
         result &&
         result.show_data &&
@@ -187,6 +190,8 @@
         result.show_data.length > 0
       ) {
         result.show_data.forEach(function(item) {
+          // Debug: cek foto_menu untuk setiap item
+          console.log('Item foto_menu:', item.foto_menu);
           html += buildTableRow(item, no++);
         });
       } else if (
@@ -196,6 +201,8 @@
         result.data.length > 0
       ) {
         result.data.forEach(function(item) {
+          // Debug: cek foto_menu untuk setiap item
+          console.log('Item foto_menu:', item.foto_menu);
           html += buildTableRow(item, no++);
         });
       } else {
@@ -314,7 +321,6 @@
             <table class="table nested-kondimen-table" style="--kantin-count: ${kantinCount};">
               <thead>
                 <tr>
-                  <th class="col-number">#</th>
                   <th class="col-nama">Kondimen</th>
                   <th class="col-kategori">Kategori</th>`;
 
@@ -328,13 +334,12 @@
               <tbody>`;
 
         kondimenData.forEach(function(k, idx) {
-          var shortNama = k.nama && k.nama.length > 15 ? k.nama.substring(0, 15) + '..' : (k.nama || '-');
+          var namaWithNumber = (idx + 1) + '. ' + (k.nama || '-');
           var kategori = k.kategori || k.kategori_kondimen || k.nama_kategori || '-';
 
           nestedTable += `
                 <tr>
-                  <td class="text-center col-number">${idx + 1}</td>
-                  <td class="col-nama" title="${k.nama || '-'}">${shortNama}</td>
+                  <td class="col-nama" title="${namaWithNumber}">${namaWithNumber}</td>
                   <td class="text-center col-kategori">${getKategoriBadge(kategori)}</td>`;
 
           kantins.forEach(function(kantin) {
@@ -365,13 +370,26 @@
       var firstId = item.ids && item.ids.length > 0 ? item.ids[0] : 0;
 
       var tanggalDisplay = formatTanggal(item.tanggal);
+      var tanggalSort = item.tanggal || '0000-00-00';
       var jamDisplay = formatJamInput(item.created_at || item.updated_at || null);
       var jamHtml = jamDisplay ? `<div class="text-muted small">${jamDisplay}</div>` : "";
+
+      var fotoMenu = '';
+      if (item.foto_menu && item.foto_menu !== '' && item.foto_menu !== null) {
+        // Ambil base path dari base_url dengan menghapus back_menu_harian
+        var basePath = base_url.split('/back_menu_harian')[0];
+        var fotoPath = basePath + '/file/products/menukondimen/' + item.foto_menu;
+        fotoMenu = `<a href="javascript:void(0);" class="btn-preview-foto" data-foto="${fotoPath}" data-menu="${item.nama_menu}" title="Klik untuk preview">
+                      <img src="${fotoPath}" alt="Foto Menu" class="img-thumbnail" style="max-height: 60px; max-width: 80px; object-fit: cover; cursor: pointer;" onerror="this.parentElement.innerHTML='<span class=\\'text-muted small\\'>Foto Error</span>';">
+                    </a>`;
+      } else {
+        fotoMenu = '<span class="text-muted small">-</span>';
+      }
 
       return `
         <tr>
           <td class="text-center">${no}</td>
-          <td>
+          <td data-order="${tanggalSort}">
             <div class="fw-semibold">${tanggalDisplay}</div>
             ${jamHtml}
           </td>
@@ -381,8 +399,9 @@
           <td>${item.jenis_menu}</td>
           <td>${item.nama_menu}</td>
           <td>${nestedKondimen}</td>
-          <td class="text-end">${item.total_orderan || '0'}</td>
+          <td class="text-center"><strong>${item.total_orderan || '0'}</strong></td>
           <td class="text-center remark-cell">${item.remark ? item.remark : ''}</td>
+          <td class="text-center foto-menu-cell">${fotoMenu}</td>
           <td class="text-center">
             <div class="btn-group" role="group">
               <button type="button" class="btn btn-warning btn-sm btn-edit-menu-harian" data-id="${firstId}" title="Edit">
@@ -397,11 +416,11 @@
     }
 
     function buildLoadingRow() {
-      return `<tr><td class="text-center" colspan="11"><div class="text-muted p-3"><i class="fas fa-spinner fa-spin fa-2x mb-1"></i><div>Memuat data...</div></div></td></tr>`;
+      return `<tr><td class="text-center" colspan="12"><div class="text-muted p-3"><i class="fas fa-spinner fa-spin fa-2x mb-1"></i><div>Memuat data...</div></div></td></tr>`;
     }
 
     function buildEmptyRow() {
-      return `<tr><td class="text-center" colspan="11"><div class="text-muted p-3"><i class="fas fa-utensils fa-2x mb-1"></i><div>Tidak ada data menu harian</div></div></td></tr>`;
+      return `<tr><td class="text-center" colspan="12"><div class="text-muted p-3"><i class="fas fa-utensils fa-2x mb-1"></i><div>Tidak ada data menu harian</div></div></td></tr>`;
     }
 
     function initDataTable() {
@@ -427,6 +446,15 @@
               previous: "Sebelumnya"
             },
           },
+          drawCallback: function(settings) {
+            var api = this.api();
+            var startIndex = api.context[0]._iDisplayStart;
+            api.column(0, {
+              page: 'current'
+            }).nodes().each(function(cell, i) {
+              cell.innerHTML = startIndex + i + 1;
+            });
+          }
         });
       } catch (e) {
         dataTable = null;
@@ -533,6 +561,8 @@
       $("#id_menu_harian").val("");
       $("#table-kondimen-menu tbody").empty();
       $("#table-kondimen-menu thead").empty();
+      $("#preview-foto-menu").hide();
+      $("#foto_menu_existing").val("");
       updateKantinDropdownText();
       $("#kantin-checkbox-group").html('<p class="text-muted mb-0">Pilih customer terlebih dahulu</p>');
       if (typeof window.renderKondimenTable === "function") window.renderKondimenTable();
@@ -559,6 +589,18 @@
             $('#id_customer').val(res.data.id_customer).trigger('change');
             $('#total_order_customer').val(res.data.total_orderan_customer || 0);
             $('#remark').val(res.data.remark || '');
+
+            // Show existing foto if available
+            if (res.data.foto_menu && res.data.foto_menu !== '' && res.data.foto_menu !== null) {
+              var basePath = base_url.split('/back_menu_harian')[0];
+              var fotoPath = basePath + '/file/products/menukondimen/' + res.data.foto_menu;
+              $('#preview-foto-menu img').attr('src', fotoPath);
+              $('#preview-foto-menu').show();
+              $('#foto_menu_existing').val(res.data.foto_menu);
+            } else {
+              $('#preview-foto-menu').hide();
+              $('#foto_menu_existing').val('');
+            }
 
             setTimeout(function() {
               if (res.data.id_kantins && Array.isArray(res.data.id_kantins)) {
@@ -799,6 +841,37 @@
       loadKantinRadioOptions();
       loadMenuList();
 
+      // Preview foto menu
+      $(document).on('change', '#foto_menu', function(e) {
+        var file = e.target.files[0];
+        if (file) {
+          // Validasi ukuran file (max 2MB)
+          if (file.size > 2 * 1024 * 1024) {
+            showError('Ukuran file maksimal 2MB');
+            $(this).val('');
+            return;
+          }
+
+          // Validasi tipe file
+          var validTypes = ['image/jpeg', 'image/jpg', 'image/png'];
+          if (!validTypes.includes(file.type)) {
+            showError('Format file harus JPG, JPEG, atau PNG');
+            $(this).val('');
+            return;
+          }
+
+          // Show preview
+          var reader = new FileReader();
+          reader.onload = function(e) {
+            $('#preview-foto-menu img').attr('src', e.target.result);
+            $('#preview-foto-menu').show();
+          };
+          reader.readAsDataURL(file);
+        } else {
+          $('#preview-foto-menu').hide();
+        }
+      });
+
       $(document).on('click', '#btn-close-modal-menu-harian', function() {
         $('#form-modal-menu-harian').modal('hide');
       });
@@ -954,6 +1027,46 @@
         setTimeout(function() {
           loadMenuHarianData();
         }, 500);
+      });
+
+      // Event handler untuk preview foto menu
+      $(document).on('click', '.btn-preview-foto', function(e) {
+        e.preventDefault();
+        var fotoPath = $(this).data('foto');
+        var namaMenu = $(this).data('menu');
+
+        // Show loading state
+        $('#xpreview_image').html(`
+          <div class="loading-state">
+            <div class="spinner-custom">
+              <i class="fas fa-spinner fa-spin"></i>
+            </div>
+            <p class="loading-text">Memuat gambar...</p>
+          </div>
+        `);
+
+        // Set nama menu di header modal
+        $('#preview-menu-text span').text(namaMenu);
+
+        // Show modal
+        $('#form-modal-preview-image').modal('show');
+
+        // Load image dengan animasi
+        var img = new Image();
+        img.onload = function() {
+          $('#xpreview_image').html('<img src="' + fotoPath + '" alt="' + namaMenu + '" class="img-fluid">');
+        };
+        img.onerror = function() {
+          $('#xpreview_image').html(`
+            <div class="loading-state">
+              <div class="spinner-custom">
+                <i class="fas fa-exclamation-triangle text-danger"></i>
+              </div>
+              <p class="loading-text text-danger">Gagal memuat gambar</p>
+            </div>
+          `);
+        };
+        img.src = fotoPath;
       });
 
       $(document).on("hide.bs.modal", ".modal", function() {

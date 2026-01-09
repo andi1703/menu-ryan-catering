@@ -42,6 +42,23 @@
       return Intl.NumberFormat().format(n || 0);
     }
 
+    // Helper function untuk badge jenis menu
+    function getJenisMenuBadgeClass(jenis) {
+      const jenisLower = (jenis || '').toLowerCase();
+      switch (jenisLower) {
+        case 'regular':
+          return 'bg-primary';
+        case 'paket':
+          return 'bg-success';
+        case 'sehat':
+          return 'bg-info';
+        case 'staff':
+          return 'bg-warning';
+        default:
+          return 'bg-secondary';
+      }
+    }
+
     // Helper function to generate bahan dropdown options
     function generateBahanOptions(selectedNama = '') {
       let options = '<option value="">-- Pilih Bahan --</option>';
@@ -66,7 +83,7 @@
         width: '100%',
         dropdownParent: $('#calcModal .modal-content'),
         placeholder: '-- Pilih Bahan --',
-        allowClear: true,
+        allowClear: false,
         minimumResultsForSearch: 0, // Always show search box
         dropdownCssClass: 'select2-bahan-dropdown',
         language: {
@@ -209,7 +226,7 @@
       const rowHtml = `
         <tr>
           <td><select class="form-control form-control-sm bahan-dropdown">${generateBahanOptions()}</select></td>
-          <td><input type="number" step="0.01" class="form-control form-control-sm bahan-qty" placeholder="0"></td>
+          <td><input type="number" step="1" class="form-control form-control-sm bahan-qty" placeholder="0"></td>
           <td><input type="text" class="form-control form-control-sm bahan-satuan" placeholder="satuan" readonly></td>
           <td class="text-center"><button class="btn btn-sm btn-outline-danger remove-bahan"><i class="ri-delete-bin-6-line"></i></button></td>
         </tr>`;
@@ -352,6 +369,20 @@
           $('#f_customer').val(s.customer_id || '');
           $('#f_shift').val((s.shift || '').toLowerCase());
 
+          // Tampilkan info menu jika ada
+          const namaMenu = s.nama_menu || '-';
+          const jenisMenu = s.jenis_menu || '-';
+
+          if (namaMenu && namaMenu !== '-') {
+            $('#display_nama_menu').text(namaMenu);
+            $('#display_jenis_menu').text(jenisMenu.toUpperCase())
+              .removeClass('bg-primary bg-success bg-warning bg-danger bg-info bg-secondary')
+              .addClass(getJenisMenuBadgeClass(jenisMenu));
+            $('#menu_info_display').show();
+          } else {
+            $('#menu_info_display').hide();
+          }
+
           // Load kondimen data
           if (data.items && data.items.length > 0) {
             renderCalcTable(data.items.map(function(item) {
@@ -459,31 +490,33 @@
         const row = `
           <tr class="condimen-row" data-recipe-id="${id}" data-menu-id="${menuId}" data-komponen-id="${komponenId}" data-nama-kondimen="${namaAttr}">
             <td>${c.nama_kondimen || '-'}</td>
-            <td class="text-end">${number(total)}</td>
-            <td class="w-120"><input type="number" class="form-control form-control-sm yield-input" min="1" value="${yieldPorsi}" data-recipe-id="${id}"></td>
-            <td class="text-end batches-cell" data-recipe-id="${id}">${number(batches)}</td>
+            <td class="text-center">${number(total)}</td>
+            <td class="text-center"><input type="number" class="form-control form-control-sm yield-input text-center" min="1" value="${yieldPorsi}" data-recipe-id="${id}"></td>
+            <td class="text-center batches-cell" data-recipe-id="${id}">${number(batches)}</td>
             <td class="text-center">
-              <button class="btn btn-sm btn-outline-primary toggle-bahan" data-recipe-id="${id}"><i class="ri-list-check-2"></i> Detail Bahan</button>
+              <button class="btn btn-sm btn-primary toggle-bahan" data-recipe-id="${id}">Detail Bahan <i class="ri-arrow-down-s-line"></i></button>
             </td>
           </tr>
           <tr class="bahan-container" data-recipe-id="${id}" data-menu-id="${menuId}" data-komponen-id="${komponenId}" data-nama-kondimen="${namaAttr}" style="display:none;">
             <td colspan="5">
-              <div class="d-flex justify-content-between align-items-center mb-2">
-                <strong>Detail Bahan</strong>
-                <button class="btn btn-sm btn-outline-success add-bahan" data-recipe-id="${id}"><i class="ri-add-line"></i> Tambah Bahan</button>
-              </div>
-              <div class="table-responsive">
-                <table class="table table-sm table-bordered mb-0 nested-table">
-                  <thead class="table-light">
-                    <tr>
-                      <th width="45%">Bahan Utama</th>
-                      <th width="25%">jumlah qty</th>
-                      <th width="20%">satuan</th>
-                      <th width="10%">aksi</th>
-                    </tr>
-                  </thead>
-                  <tbody class="bahan-list"></tbody>
-                </table>
+              <div class="nested-table-wrapper">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                  <strong>Detail Bahan</strong>
+                  <button class="btn btn-sm add-bahan" data-recipe-id="${id}"><i class="ri-add-line"></i> Tambah Bahan</button>
+                </div>
+                <div class="table-responsive">
+                  <table class="table table-sm table-bordered mb-0 nested-table">
+                    <thead class="table-light">
+                      <tr>
+                        <th width="45%">Bahan Utama</th>
+                        <th width="25%">Jumlah Qty</th>
+                        <th width="20%">Satuan</th>
+                        <th width="10%">Aksi</th>
+                      </tr>
+                    </thead>
+                    <tbody class="bahan-list"></tbody>
+                  </table>
+                </div>
               </div>
             </td>
           </tr>`;
@@ -514,7 +547,7 @@
             const rowHtml = `
               <tr>
                 <td><select class="form-control form-control-sm bahan-dropdown">${generateBahanOptions(nama)}</select></td>
-                <td><input type="number" step="0.01" class="form-control form-control-sm bahan-qty" value="${(r.qty||0)}"></td>
+                <td><input type="number" step="1" class="form-control form-control-sm bahan-qty" value="${parseInt(r.qty||0)}"></td>
                 <td><input type="text" class="form-control form-control-sm bahan-satuan" value="${satuan.replace(/\"/g,'&quot;')}" readonly></td>
                 <td class="text-center"><button class="btn btn-sm btn-outline-danger remove-bahan"><i class="ri-delete-bin-6-line"></i></button></td>
               </tr>`;
@@ -538,7 +571,7 @@
               const rowHtml = `
                 <tr>
                   <td><select class="form-control form-control-sm bahan-dropdown">${generateBahanOptions(nama)}</select></td>
-                  <td><input type="number" step="0.01" class="form-control form-control-sm bahan-qty" value="${(r.qty||0)}"></td>
+                  <td><input type="number" step="1" class="form-control form-control-sm bahan-qty" value="${parseInt(r.qty||0)}"></td>
                   <td><input type="text" class="form-control form-control-sm bahan-satuan" value="${satuan.replace(/\"/g,'&quot;')}" readonly></td>
                   <td class="text-center"><button class="btn btn-sm btn-outline-danger remove-bahan"><i class="ri-delete-bin-6-line"></i></button></td>
                 </tr>`;
@@ -612,7 +645,7 @@
               const rowHtml = `
                 <tr>
                   <td><select class="form-control form-control-sm bahan-dropdown">${options}</select></td>
-                  <td><input type="number" step="0.01" class="form-control form-control-sm bahan-qty" value="${(r.qty||0)}"></td>
+                  <td><input type="number" step="1" class="form-control form-control-sm bahan-qty" value="${parseInt(r.qty||0)}"></td>
                   <td><input type="text" class="form-control form-control-sm bahan-satuan" value="${satuan.replace(/"/g,'&quot;')}" readonly></td>
                   <td class="text-center"><button class="btn btn-sm btn-outline-danger remove-bahan"><i class="ri-delete-bin-6-line"></i></button></td>
                 </tr>`;
@@ -648,7 +681,7 @@
       const newRow = `
         <tr>
           <td><select class="form-control form-control-sm bahan-dropdown">${generateBahanOptions()}</select></td>
-          <td><input type="number" step="0.01" class="form-control form-control-sm bahan-qty" placeholder="0"></td>
+          <td><input type="number" step="1" class="form-control form-control-sm bahan-qty" placeholder="0"></td>
           <td><input type="text" class="form-control form-control-sm bahan-satuan" placeholder="satuan" readonly></td>
           <td class="text-center"><button class="btn btn-sm btn-outline-danger remove-bahan"><i class="ri-delete-bin-6-line"></i></button></td>
         </tr>`;
@@ -683,7 +716,40 @@
         shift: shift
       }).done(res => {
         console.log('Kondimen data from server:', res);
-        renderCalcTable(res.data || []);
+        const data = res.data || [];
+        console.log('First item data:', data[0]);
+
+        if (!data || data.length === 0) {
+          // Tampilkan notifikasi jika tidak ada data
+          Swal.fire({
+            icon: 'warning',
+            title: 'Data Tidak Ditemukan',
+            html: `Tidak ada menu harian untuk:<br>
+                   <strong>Tanggal:</strong> ${tanggal}<br>
+                   <strong>Customer:</strong> ${$('#f_customer option:selected').text()}<br>
+                   <strong>Shift:</strong> ${shift.toUpperCase()}`,
+            confirmButtonText: 'OK'
+          });
+          $('#calc_excel_body').empty();
+          $('#menu_info_display').hide();
+        } else {
+          // Ambil nama menu dan jenis menu dari data pertama
+          const firstItem = data[0];
+          const namaMenu = firstItem.nama_menu || '-';
+          const jenisMenu = firstItem.jenis_menu || '-';
+
+          console.log('Nama Menu:', namaMenu);
+          console.log('Jenis Menu:', jenisMenu);
+
+          // Tampilkan info menu
+          $('#display_nama_menu').text(namaMenu);
+          $('#display_jenis_menu').text(jenisMenu.toUpperCase())
+            .removeClass('bg-primary bg-success bg-warning bg-danger bg-info bg-secondary')
+            .addClass(getJenisMenuBadgeClass(jenisMenu));
+          $('#menu_info_display').slideDown(300);
+
+          renderCalcTable(data);
+        }
       }).fail(() => Swal.fire('Error', 'Gagal memuat data kondimen', 'error'));
     });
 
@@ -785,6 +851,7 @@
         $('#f_customer').val('').trigger('change');
         $('#f_shift').val('').trigger('change');
         $('#calc_excel_body').empty();
+        $('#menu_info_display').hide(); // Sembunyikan info menu
         $('#calcModal .select2-container').remove();
         console.log('Reset filters and table for ADD mode');
       }

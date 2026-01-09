@@ -435,6 +435,22 @@ class Back_Vegetable_calculator extends CI_Controller
 
     if (!$session) return $this->output->set_content_type('application/json')->set_output(json_encode(['data' => null]));
 
+    // Get menu harian IDs and get first menu data directly
+    $firstMenu = $this->db
+      ->select('vsm.menu_harian_id, mh.nama_menu, mh.jenis_menu')
+      ->from('vegetable_calc_session_menu vsm')
+      ->join('menu_harian mh', 'mh.id_menu_harian = vsm.menu_harian_id', 'left')
+      ->where('vsm.session_id', $id)
+      ->limit(1)
+      ->get()
+      ->row_array();
+
+    // Add to session data
+    $session['menu_harian_id'] = $firstMenu ? $firstMenu['menu_harian_id'] : '-';
+    $session['nama_menu'] = $firstMenu ? $firstMenu['nama_menu'] : '-';
+    $session['jenis_menu'] = $firstMenu ? $firstMenu['jenis_menu'] : '-';
+
+    // Get all menu IDs for processing kondimen
     $menuIds = $this->db->select('menu_harian_id')->from('vegetable_calc_session_menu')->where('session_id', $id)->get()->result_array();
     $idList = array_map(function ($x) {
       return (int)$x['menu_harian_id'];

@@ -71,8 +71,8 @@ class M_Vegetable_calculator extends CI_Model
   {
     // Return per-kondimen rows with menu_harian_id for saving bahan
     // GROUP BY hanya berdasarkan kondimen (bukan per menu_harian) untuk menghindari duplikasi
-    // Ambil MAX(id_menu_harian) sebagai representasi
-    $this->db->select('MAX(mhk.id_menu_harian) AS menu_harian_id, mhk.id_komponen, mhk.nama_kondimen, SUM(COALESCE(mhk.qty_kondimen,0)) AS total_order');
+    // Ambil MAX(id_menu_harian) sebagai representasi dan ambil nama_menu + jenis_menu
+    $this->db->select('MAX(mhk.id_menu_harian) AS menu_harian_id, mhk.id_komponen, mhk.nama_kondimen, SUM(COALESCE(mhk.qty_kondimen,0)) AS total_order, MAX(mh.nama_menu) AS nama_menu, MAX(mh.jenis_menu) AS jenis_menu');
     $this->db->from('menu_harian_kondimen mhk');
     $this->db->join('menu_harian mh', 'mhk.id_menu_harian = mh.id_menu_harian', 'inner');
     $this->db->where('mh.tanggal >=', $startDate);

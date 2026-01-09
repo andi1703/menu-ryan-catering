@@ -96,10 +96,21 @@
           </div>
 
           <div class="row">
-            <div class="col-md-12">
+            <div class="col-md-8">
               <div class="form-group mb-3">
                 <label for="remark" class="form-label">Catatan / Remark</label>
                 <textarea id="remark" name="remark" class="form-control" placeholder="Catatan menu (opsional)"></textarea>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="form-group mb-3">
+                <label for="foto_menu" class="form-label">Foto Menu</label>
+                <input type="file" class="form-control" id="foto_menu" name="foto_menu" accept="image/*">
+                <small class="text-muted">Format: JPG, PNG, JPEG (Max 2MB)</small>
+                <div id="preview-foto-menu" class="mt-2" style="display: none;">
+                  <img src="" alt="Preview" class="img-thumbnail" style="max-height: 150px;">
+                  <input type="hidden" id="foto_menu_existing" name="foto_menu_existing">
+                </div>
               </div>
             </div>
           </div>

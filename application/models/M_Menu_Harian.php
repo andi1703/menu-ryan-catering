@@ -23,7 +23,7 @@ class M_Menu_Harian extends CI_Model
       $this->db->where('mh.id_customer', $filter['id_customer']);
     }
 
-    $this->db->order_by('mh.tanggal', 'DESC');
+    $this->db->order_by('DATE(mh.tanggal)', 'DESC');
     $this->db->order_by('mh.shift', 'ASC');
 
     return $this->db->get()->result_array();

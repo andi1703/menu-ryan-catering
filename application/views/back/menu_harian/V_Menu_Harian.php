@@ -51,31 +51,58 @@
        NESTED TABLE KONDIMEN - COMPACT VERSION
        ============================================= */
     .nested-kondimen-wrapper {
-      background-color: #f8f9fa;
-      border-radius: 4px;
-      /* ✅ DIKECILKAN */
-      padding: 4px;
-      /* ✅ DIKECILKAN */
-      border: 1px solid #e1e4e8;
+      background-color: transparent;
+      border-radius: 0;
+      padding: 0 !important;
+      margin: 0 !important;
+      border: none;
       max-width: 100%;
       overflow-x: auto;
-      /* ✅ SCROLL HORIZONTAL JIKA PERLU */
+      display: block;
+      line-height: 1;
     }
 
     .nested-kondimen-table {
       width: 100%;
-      margin: 0;
+      margin: 0 !important;
+      margin-bottom: 0 !important;
       font-size: 0.7rem;
-      border-collapse: separate;
+      border-collapse: collapse;
       border-spacing: 0;
       background-color: white;
-      border-radius: 3px;
+      border-radius: 0;
       overflow: hidden;
       box-shadow: none;
       min-width: 600px;
-      /* ✅ DIPERBESAR DARI 450px UNTUK ACCOMMODATE NAMA LENGKAP */
       table-layout: auto;
-      /* ✅ AUTO LAYOUT UNTUK FLEXIBLE WIDTH */
+      line-height: 1;
+      display: table;
+    }
+
+    .nested-kondimen-table tbody {
+      margin: 0 !important;
+      padding: 0 !important;
+      border-bottom: 0 !important;
+    }
+
+    .nested-kondimen-table tbody tr {
+      margin: 0 !important;
+      padding: 0 !important;
+    }
+
+    .nested-kondimen-table tbody tr:last-child {
+      margin-bottom: 0 !important;
+      border-bottom: 0 !important;
+    }
+
+    .nested-kondimen-table tbody td {
+      margin: 0 !important;
+      line-height: 1.2;
+    }
+
+    .nested-kondimen-table tbody tr:last-child td {
+      border-bottom: 1px solid #dee2e6 !important;
+      padding-bottom: 3px !important;
     }
 
     /* ✅ HEADER NESTED TABLE - IMPROVED FOR LONG KANTIN NAMES */
@@ -454,16 +481,8 @@
     }
 
     /* =============================================
-       SCROLL HINT FOR NESTED TABLE
+       SCROLL HINT FOR NESTED TABLE - REMOVED
        ============================================= */
-    .nested-kondimen-wrapper::after {
-      content: "";
-      display: block;
-      height: 2px;
-      background: linear-gradient(90deg, transparent 0%, #007bff 50%, transparent 100%);
-      margin-top: 2px;
-      opacity: 0.3;
-    }
 
     /* =============================================
        SPECIAL HANDLING FOR VERY LONG KANTIN NAMES
@@ -483,6 +502,31 @@
       min-width: 120px;
       width: 20vw;
       max-width: 0vw;
+    }
+
+    /* Style untuk foto menu di tabel */
+    .btn-preview-foto {
+      display: inline-block;
+      transition: transform 0.2s ease;
+      text-decoration: none;
+    }
+
+    .btn-preview-foto:hover {
+      transform: scale(1.05);
+    }
+
+    .btn-preview-foto img {
+      transition: all 0.3s ease;
+      border: 2px solid #e9ecef;
+    }
+
+    .btn-preview-foto:hover img {
+      border-color: #007bff;
+      box-shadow: 0 4px 8px rgba(0, 123, 255, 0.3);
+    }
+
+    .foto-menu-cell {
+      vertical-align: middle !important;
     }
   </style>
 </head>
@@ -559,7 +603,8 @@
                             <th width="10%">Nama Menu</th>
                             <th width="18%">Kondimen Menu</th>
                             <th class="text-center" width="7%">Total Order</th>
-                            <th class="text-center remark-cell" width="22%">Remark</th>
+                            <th class="text-center remark-cell" width="15%">Remark</th>
+                            <th class="text-center" width="7%">Foto Menu</th>
                             <th class="text-center" width="4%">Aksi</th>
                           </tr>
                         </thead>
@@ -761,6 +806,9 @@
 
   <!-- Modal Form -->
   <?php $this->load->view('back/menu_harian/V_Menu_Harian_form'); ?>
+
+  <!-- Modal Preview Image -->
+  <?php $this->load->view('back/menu_harian/preview_image'); ?>
 
   <!-- JAVASCRIPT -->
   <script src="<?php echo base_url('assets_back/libs/jquery/jquery.min.js'); ?>"></script>

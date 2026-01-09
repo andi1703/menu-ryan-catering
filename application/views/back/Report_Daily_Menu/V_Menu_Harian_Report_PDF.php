@@ -5,11 +5,11 @@
   <meta charset="UTF-8">
   <title>MENU HARIAN REPORT</title>
   <style>
-    /* 1. SETUP KERTAS & RESET TOTAL */
+    /* 1. SETUP KERTAS */
     @page {
       size: A4 landscape;
-      margin: 5mm;
-      /* Margin kertas tipis 5mm */
+      /* Margin: Atas/Bawah 10mm, Kiri/Kanan 20mm agar konten tidak terlalu mepet tepi kertas */
+      margin: 10mm 15mm;
     }
 
     * {
@@ -23,17 +23,17 @@
       font-size: 7pt;
       color: #000;
       line-height: 1.1;
+      padding: 0 5mm;
     }
 
     .page-container {
-      padding: 4mm 6mm 0;
+      width: 100%;
     }
 
     /* HEADER LAPORAN */
     .header {
       text-align: center;
       margin-bottom: 5px;
-      /* Jarak ke tabel */
       border-bottom: 2px solid #000;
       padding-bottom: 2px;
       width: 100%;
@@ -43,7 +43,6 @@
       font-size: 14pt;
       font-weight: bold;
       text-transform: uppercase;
-      line-height: 1;
       margin-bottom: 2px;
     }
 
@@ -52,40 +51,57 @@
       margin: 0;
     }
 
-    /* === LAYOUT UTAMA: 3 KOLOM === */
-    .layout-grid {
+    /* === LAYOUT UTAMA: TABLE FIXED === */
+    .page-wrapper {
       width: 100%;
-      margin-top: 0;
-      font-size: 0;
-      display: block;
+      page-break-after: always;
+      /* Ganti halaman setelah setiap wrapper selesai */
     }
 
-    .layout-grid .grid-col {
-      display: inline-block;
+    .page-wrapper:last-child {
+      page-break-after: auto;
+    }
+
+    table.layout-grid {
+      width: 100%;
+      table-layout: fixed;
+      border-collapse: collapse;
+      border: none;
+      margin-top: 5px;
+    }
+
+    table.layout-grid td {
       vertical-align: top;
       padding: 0;
-      font-size: 7pt;
-      box-sizing: border-box;
     }
 
-    /* Pengaturan Lebar Kolom yang Aman */
-    .layout-grid .col-content {
+    /* Kolom Kiri */
+    td.grid-col-left {
       width: 49%;
+      padding-right: 5px;
+      /* Padding internal antar kolom */
     }
 
-    .layout-grid .col-spacer {
+    /* Spacer Tengah */
+    td.grid-col-spacer {
       width: 2%;
     }
 
-    /* WRAPPER ITEM (Customer / Menu) */
+    /* Kolom Kanan */
+    td.grid-col-right {
+      width: 49%;
+      padding-left: 5px;
+      /* Padding internal antar kolom */
+    }
+
+    /* WRAPPER ITEM */
     .item-wrapper {
       width: 100%;
-      margin-bottom: 4px;
-      /* Jarak vertikal antar customer */
+      margin-bottom: 5px;
       border: 1px solid #000;
       background-color: #fff;
-      page-break-inside: auto;
-      break-inside: auto;
+      page-break-inside: avoid;
+      break-inside: avoid;
     }
 
     /* HEADER CUSTOMER */
@@ -111,20 +127,16 @@
       font-weight: bold;
     }
 
-    /* CONTAINER MENU DALAM CUSTOMER */
+    /* CONTAINER MENU */
     .customer-body {
       padding: 0;
       background-color: #fff;
     }
 
-    /* KOTAK MENU INDIVIDUAL */
+    /* MENU BOX */
     .menu-box {
       width: 100%;
-      margin: 0;
       border-bottom: 1px solid #000;
-      page-break-inside: auto;
-      /* izinkan pecah jika perlu agar ruang atas terisi */
-      break-inside: auto;
     }
 
     .menu-box:last-child {
@@ -139,11 +151,6 @@
       font-weight: bold;
       font-size: 7.5pt;
       color: #000;
-      text-transform: uppercase;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 2px;
       text-align: center;
     }
 
@@ -151,15 +158,11 @@
       font-weight: normal;
       font-size: 6.5pt;
       color: #000;
-      text-transform: none;
     }
 
-    .menu-title .menu-meta-line strong {
-      font-size: 7.5pt;
-    }
-
-    /* TABEL DATA KONDIMEN */
-    table.data-table {
+    /* TABEL DATA */
+    table.data-table,
+    table.special-summary-table {
       width: 100%;
       border-collapse: collapse;
       font-size: 7pt;
@@ -169,15 +172,16 @@
     }
 
     table.data-table th,
-    table.data-table td {
+    table.data-table td,
+    table.special-summary-table th,
+    table.special-summary-table td {
       border: 1px solid #999;
       padding: 2px 3px;
-      text-align: center;
       vertical-align: middle;
       word-wrap: break-word;
     }
 
-    /* Hapus border duplikat agar rapi */
+    /* Clean Borders */
     table.data-table th:first-child,
     table.data-table td:first-child {
       border-left: none;
@@ -192,21 +196,39 @@
       border-top: none;
     }
 
-    table.data-table th {
+    table.special-summary-table th:first-child,
+    table.special-summary-table td:first-child {
+      border-left: none;
+    }
+
+    table.special-summary-table th:last-child,
+    table.special-summary-table td:last-child {
+      border-right: none;
+    }
+
+    table.special-summary-table thead th {
+      border-top: none;
+    }
+
+    /* Styling Header Tabel */
+    table.data-table th,
+    .special-summary-table thead th {
       text-align: center;
       background-color: #333;
       color: #fff;
       font-weight: bold;
     }
 
-    .col-total-merged {
+    .col-total-merged,
+    .special-summary-table tbody .col-total {
       background-color: #ffe699;
       color: #000;
       font-weight: bold;
-      font-size: 8pt;
+      text-align: center;
     }
 
-    table.data-table thead .col-total-merged {
+    table.data-table thead .col-total-merged,
+    .special-summary-table thead .col-total {
       background-color: #333;
       color: #fff;
     }
@@ -216,11 +238,13 @@
       padding-left: 4px;
     }
 
-    .col-kondimen,
-    .col-kondimen-cell {
+    .text-center {
+      text-align: center;
+    }
+
+    /* Kolom Kondimen */
+    .col-kondimen {
       width: 38%;
-      min-width: 38%;
-      max-width: 38%;
     }
 
     .col-kondimen-cell {
@@ -228,117 +252,37 @@
     }
 
     .kondimen-number {
-      display: inline-block;
-      min-width: 12px;
       font-weight: bold;
+      margin-right: 3px;
     }
 
     .kondimen-name {
-      display: inline-block;
-      margin-left: 2px;
-    }
-
-    .text-qty {
-      font-weight: normal;
-      color: #000;
+      display: inline;
     }
 
     .no-data {
       text-align: center;
       padding: 20px;
       border: 1px dashed #ccc;
-    }
-
-    .badge-shift {
-      display: inline-block;
-      padding: 1px 7px;
-      border-radius: 999px;
-      font-size: 6.5pt;
-      font-weight: 700;
-      color: #fff;
-      text-transform: capitalize;
-      letter-spacing: 0.3px;
-    }
-
-    .special-summary-table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 7pt;
-    }
-
-    .special-summary-table th,
-    .special-summary-table td {
-      border: 1px solid #999;
-      padding: 3px 4px;
-      vertical-align: middle;
-    }
-
-    .special-summary-table thead th {
-      background-color: #444;
-      color: #fff;
-      text-align: center;
-      font-weight: bold;
-    }
-
-    .special-summary-table .col-summary {
-      text-align: left;
-      line-height: 1.35;
-    }
-
-    .special-summary-table tbody .col-total {
-      background-color: #ffe699;
-      font-weight: bold;
-      text-align: center;
-      width: 45px;
-    }
-
-    .special-summary-table thead .col-total {
-      background-color: #444;
-      color: #fff;
-    }
-
-    /* Hindari pecah di tengah item untuk kerapihan */
-    .item-wrapper {
-      page-break-inside: auto;
+      margin-top: 10px;
     }
   </style>
 </head>
 
 <body>
   <div class="page-container">
-    <!-- HEADER -->
-    <div class="header">
-      <h1>MENU HARIAN REPORT PT RYAN CATERING</h1>
-      <div class="sub">
-        Shift: <strong><?= !empty($filter['shift']) ? strtoupper($filter['shift']) : 'SEMUA' ?></strong>
-        &nbsp;|&nbsp;
-        Tanggal: <strong><?= !empty($filter['tanggal']) ? date('d/m/Y', strtotime($filter['tanggal'])) : date('d/m/Y') ?></strong>
-        <?php if (isset($grandTotalOrderAll) && $grandTotalOrderAll > 0) : ?>
-          &nbsp;|&nbsp;
-          <span style="background:#ffc107; color:#000; padding:2px 6px; border-radius:3px; font-weight:bold;">
-            Grand Total Order: <?= number_format($grandTotalOrderAll, 0, ',', '.') ?>
-          </span>
-        <?php endif; ?>
-      </div>
-    </div>
 
     <?php if (!empty($groupedByCustomer)) : ?>
-
       <?php
-      // === LOGIKA PER-HALAMAN, 2 KOLOM ===
-      $isSingleCustomer = (count($groupedByCustomer) == 1);
-
+      // === PRE-PROCESS DATA ===
       $allItems = [];
-
-      // SELALU: Flatten menjadi header + item menu untuk packing dua kolom yang rapat
       foreach ($groupedByCustomer as $c) {
-        // Header biru sekali per customer
         $allItems[] = [
           'type' => 'customer_header',
           'customer_name' => isset($c['customer_name']) ? $c['customer_name'] : '',
           'grand_total_order' => isset($c['grand_total_order']) ? (int)$c['grand_total_order'] : 0
         ];
-        // Item menu per customer
+
         $menus = normalizeMenus(isset($c['menu_data']) ? $c['menu_data'] : []);
         foreach ($menus as $m) {
           $allItems[] = [
@@ -350,48 +294,100 @@
         }
       }
 
-      // Bangun halaman-kolom dengan best-fit agar ruang atas terpakai
-      $pages = buildPageGrids($allItems, 220);
+      // === LOGIKA FILL PAGE ===
+      // Limit 65 untuk A4 Landscape
+      $maxPageHeight = 65;
+      $pages = buildPageGrids($allItems, $maxPageHeight);
       ?>
 
-      <?php foreach ($pages as $pg) : ?>
-        <div class="layout-grid">
-          <div class="grid-col col-content">
-            <?php foreach ($pg['left'] as $item) {
-              renderItem($item);
-            } ?>
+      <?php foreach ($pages as $pageIndex => $pg) : ?>
+        <div class="page-wrapper">
+          <!-- HEADER DI SETIAP HALAMAN -->
+          <div class="header">
+            <h1>MENU HARIAN REPORT PT RYAN CATERING</h1>
+            <div class="sub">
+              Shift: <strong><?= !empty($filter['shift']) ? strtoupper($filter['shift']) : 'SEMUA' ?></strong>
+              &nbsp;|&nbsp;
+              Tanggal: <strong><?= !empty($filter['tanggal']) ? date('d/m/Y', strtotime($filter['tanggal'])) : date('d/m/Y') ?></strong>
+              <?php if (isset($grandTotalOrderAll) && $grandTotalOrderAll > 0) : ?>
+                &nbsp;|&nbsp;
+                <span style="background:#ffc107; color:#000; padding:1px 5px; border-radius:3px; font-weight:bold;">
+                  Grand Total: <?= number_format($grandTotalOrderAll, 0, ',', '.') ?> porsi
+                </span>
+              <?php endif; ?>
+              &nbsp;|&nbsp;
+              Halaman: <strong><?= $pageIndex + 1 ?></strong>
+            </div>
           </div>
-          <div class="grid-col col-spacer"></div>
-          <div class="grid-col col-content">
-            <?php foreach ($pg['right'] as $item) {
-              renderItem($item);
-            } ?>
-          </div>
+
+          <!-- KONTEN GRID -->
+          <table class="layout-grid">
+            <tr>
+              <!-- KOLOM KIRI -->
+              <td class="grid-col-left">
+                <?php foreach ($pg['left'] as $item) {
+                  renderItem($item);
+                } ?>
+              </td>
+
+              <!-- SPACER -->
+              <td class="grid-col-spacer">&nbsp;</td>
+
+              <!-- KOLOM KANAN -->
+              <td class="grid-col-right">
+                <?php
+                if (!empty($pg['right'])) {
+                  foreach ($pg['right'] as $item) {
+                    renderItem($item);
+                  }
+                } else {
+                  echo '&nbsp;';
+                }
+                ?>
+              </td>
+            </tr>
+          </table>
         </div>
       <?php endforeach; ?>
 
     <?php else : ?>
-      <div class="no-data"><strong>⚠ Tidak Ada Data</strong></div>
+      <!-- TAMPILAN JIKA TIDAK ADA DATA -->
+      <div class="page-wrapper">
+        <div class="header">
+          <h1>MENU HARIAN REPORT PT RYAN CATERING</h1>
+          <div class="sub">
+            Shift: <strong><?= !empty($filter['shift']) ? strtoupper($filter['shift']) : 'SEMUA' ?></strong>
+            &nbsp;|&nbsp;
+            Tanggal: <strong><?= !empty($filter['tanggal']) ? date('d/m/Y', strtotime($filter['tanggal'])) : date('d/m/Y') ?></strong>
+          </div>
+        </div>
+        <div class="no-data"><strong>⚠ Tidak Ada Data</strong></div>
+      </div>
     <?php endif; ?>
   </div>
-
 </body>
 
 </html>
 
 <?php
-// === HELPER FUNCTIONS (PHP) ===
+// ==========================================
+// FUNGSI BANTUAN PHP
+// ==========================================
 
 function normalizeMenus($menuData)
 {
   $menus = [];
+  if (empty($menuData)) return [];
+
   $firstItem = reset($menuData);
   if (isset($firstItem['kondimen_list'])) {
     return $menuData;
   }
+
   foreach ($menuData as $row) {
     $shiftValue = isset($row['shift']) ? $row['shift'] : '';
     $menuKey = $row['nama_menu'] . '_' . $row['jenis_menu'] . '_' . $shiftValue;
+
     if (!isset($menus[$menuKey])) {
       $menus[$menuKey] = [
         'nama_menu' => $row['nama_menu'],
@@ -402,38 +398,46 @@ function normalizeMenus($menuData)
         'kondimen_list' => []
       ];
     }
+
     $row['menu_kondimen'] = isset($row['menu_kondimen']) ? $row['menu_kondimen'] : (isset($row['nama_kondimen']) ? $row['nama_kondimen'] : '-');
-    $row['shift'] = $shiftValue;
     $menus[$menuKey]['kondimen_list'][] = $row;
   }
   return array_values($menus);
 }
 
-// Estimasi tinggi item untuk pembagian per halaman
+// Fungsi Estimasi Tinggi Item
 function estimateItemHeight($item)
 {
-  $base = 6;
-  if ($item['type'] === 'customer_full') {
-    $c = $item['data'];
-    $menus = normalizeMenus(isset($c['menu_data']) ? $c['menu_data'] : []);
-    $size = $base;
-    foreach ($menus as $m) {
-      $rows = isset($m['kondimen_list']) && is_array($m['kondimen_list']) ? count($m['kondimen_list']) : 1;
-      $size += 3 + $rows;
-    }
-    return $size;
-  }
+  $height = 0;
+
   if ($item['type'] === 'customer_header') {
-    // Header biru kecil, cukup tinggi sebagian kecil
-    return 6;
+    return 4;
   }
-  // menu_only
-  $rows = isset($item['menu_data']['kondimen_list']) && is_array($item['menu_data']['kondimen_list']) ? count($item['menu_data']['kondimen_list']) : 1;
-  return $base + 3 + $rows;
+
+  if ($item['type'] === 'menu_only') {
+    $height += 4;
+
+    $kondimenList = isset($item['menu_data']['kondimen_list']) ? $item['menu_data']['kondimen_list'] : [];
+    if (empty($kondimenList)) {
+      $height += 2;
+    } else {
+      foreach ($kondimenList as $k) {
+        $hRow = 1.2;
+        $nama = isset($k['menu_kondimen']) ? $k['menu_kondimen'] : '';
+        if (strlen($nama) > 35) {
+          $hRow += 1.0;
+        }
+        $height += $hRow;
+      }
+    }
+    return $height;
+  }
+
+  return 3;
 }
 
-// Distribusi ke dua kolom dengan greedy fill untuk mengisi ruang atas
-function buildPageGrids($items, $pageLimit = 220)
+// Logika Distribusi Halaman
+function buildPageGrids($items, $pageLimit)
 {
   $pages = [];
   $left = [];
@@ -444,18 +448,23 @@ function buildPageGrids($items, $pageLimit = 220)
   foreach ($items as $it) {
     $h = estimateItemHeight($it);
 
-    // Greedy: isi kolom kiri dulu sampai penuh, baru kanan
-    if ($hL + $h <= $pageLimit) {
+    // KONDISI 1: Halaman baru (kosong) ATAU Muat di KIRI
+    $isPageEmpty = (empty($left) && empty($right));
+
+    if (($hL + $h <= $pageLimit) || ($isPageEmpty && $hL == 0)) {
       $left[] = $it;
       $hL += $h;
-    } elseif ($hR + $h <= $pageLimit) {
+    }
+    // KONDISI 2: Kiri Penuh, Muat di KANAN?
+    elseif ($hR + $h <= $pageLimit) {
       $right[] = $it;
       $hR += $h;
-    } else {
-      // Kedua kolom penuh, buat halaman baru
-      if (!empty($left) || !empty($right)) {
-        $pages[] = ['left' => $left, 'right' => $right];
-      }
+    }
+    // KONDISI 3: Semua Penuh -> Bikin Halaman Baru
+    else {
+      $pages[] = ['left' => $left, 'right' => $right];
+
+      // Item ini masuk ke Kiri halaman baru
       $left = [$it];
       $right = [];
       $hL = $h;
@@ -463,44 +472,32 @@ function buildPageGrids($items, $pageLimit = 220)
     }
   }
 
+  // Sisa item
   if (!empty($left) || !empty($right)) {
     $pages[] = ['left' => $left, 'right' => $right];
   }
+
   return $pages;
 }
 
 function renderItem($item)
 {
-  if ($item['type'] === 'customer_full') {
-    $c = $item['data'];
-    $menus = normalizeMenus(isset($c['menu_data']) ? $c['menu_data'] : []);
+  if ($item['type'] === 'customer_header') {
+    $grandTotal = isset($item['grand_total_order']) ? (int)$item['grand_total_order'] : 0;
 ?>
-    <div class="item-wrapper">
-      <div class="customer-header-block">
-        <span><?= htmlspecialchars($c['customer_name']) ?></span>
-        <span class="total-order-badge">Total Order: <?= isset($c['grand_total_order']) ? (int)$c['grand_total_order'] : 0 ?></span>
-      </div>
-      <div class="customer-body">
-        <?php foreach ($menus as $m) {
-          renderMenuTable($m, $c['kantins'], $c['customer_name']);
-        } ?>
-      </div>
-    </div>
-  <?php
-  } elseif ($item['type'] === 'customer_header') {
-  ?>
-    <div class="item-wrapper">
+    <div class="item-wrapper" style="border:none; border-bottom:1px solid #000; margin-bottom:0;">
       <div class="customer-header-block">
         <span><?= htmlspecialchars($item['customer_name']) ?></span>
-        <span class="total-order-badge">Total Order: <?= isset($item['grand_total_order']) ? (int)$item['grand_total_order'] : 0 ?></span>
+        <span class="total-order-badge">Total: <?= $grandTotal ?> porsi</span>
       </div>
     </div>
   <?php
   } elseif ($item['type'] === 'menu_only') {
+    $cName = isset($item['customer_name']) ? $item['customer_name'] : '';
   ?>
     <div class="item-wrapper">
       <div class="customer-body">
-        <?php renderMenuTable($item['menu_data'], $item['kantins'], isset($item['customer_name']) ? $item['customer_name'] : ''); ?>
+        <?php renderMenuTable($item['menu_data'], $item['kantins'], $cName); ?>
       </div>
     </div>
   <?php
@@ -510,64 +507,61 @@ function renderItem($item)
 function renderMenuTable($menu, $kantins, $customerName = '')
 {
   $kondimenList = isset($menu['kondimen_list']) ? $menu['kondimen_list'] : [];
+
   $totalOrderMenu = 0;
-  if (isset($menu['total_order_customer'])) {
-    $totalOrderMenu = intval($menu['total_order_customer']);
-  } elseif (isset($menu['total_orderan'])) {
-    $totalOrderMenu = intval($menu['total_orderan']);
-  }
+  if (isset($menu['total_order_customer'])) $totalOrderMenu = intval($menu['total_order_customer']);
+  elseif (isset($menu['total_orderan'])) $totalOrderMenu = intval($menu['total_orderan']);
 
   $hasSingleKantin = is_array($kantins) && count($kantins) === 1;
   $isSpecialSummary = $hasSingleKantin || isSpecialSummaryCustomer($customerName);
-
   ?>
   <div class="menu-box">
     <div class="menu-title">
       <?php
-      $metaSegments = [];
-      $menuNameSafe = htmlspecialchars($menu['nama_menu'] ?? '-');
-      $metaSegments[] = '<strong>' . $menuNameSafe . '</strong>';
+      $menuNameSafe = htmlspecialchars(isset($menu['nama_menu']) ? $menu['nama_menu'] : '-');
+      $parts = ['<strong>' . $menuNameSafe . '</strong>'];
+
       if (!empty($menu['jenis_menu'])) {
-        $metaSegments[] = htmlspecialchars(strtoupper($menu['jenis_menu']));
+        $parts[] = htmlspecialchars(strtoupper($menu['jenis_menu']));
       }
       if (!empty($menu['shift'])) {
-        $metaSegments[] = '<strong>' . htmlspecialchars(ucwords(strtolower($menu['shift']))) . '</strong>';
+        $parts[] = '<strong>' . htmlspecialchars(ucwords(strtolower($menu['shift']))) . '</strong>';
       }
+
       if (!empty($customerName)) {
-        $metaSegments[] = htmlspecialchars($customerName);
+        $parts[] = htmlspecialchars($customerName);
       }
       ?>
-      <span class="menu-meta-line"><?= implode(' | ', $metaSegments) ?></span>
+      <span class="menu-meta-line"><?= implode(' | ', $parts) ?></span>
     </div>
 
     <?php if ($isSpecialSummary) :
       $summaryParts = [];
-      foreach ($kondimenList as $kondimen) {
-        $namaKondimen = isset($kondimen['menu_kondimen']) ? $kondimen['menu_kondimen'] : (isset($kondimen['nama_kondimen']) ? $kondimen['nama_kondimen'] : '-');
-        $qtyValue = 0;
-        if (isset($kondimen['total']) && $kondimen['total'] !== '') {
-          $qtyValue = intval($kondimen['total']);
-        } elseif (isset($kondimen['qty_per_kantin']) && is_array($kondimen['qty_per_kantin'])) {
-          $qtyValue = array_sum(array_map('intval', $kondimen['qty_per_kantin']));
+      foreach ($kondimenList as $k) {
+        $nama = isset($k['menu_kondimen']) ? $k['menu_kondimen'] : (isset($k['nama_kondimen']) ? $k['nama_kondimen'] : '-');
+        $qty = 0;
+        if (isset($k['total']) && $k['total'] !== '') $qty = intval($k['total']);
+        elseif (isset($k['qty_per_kantin']) && is_array($k['qty_per_kantin'])) {
+          $qty = array_sum(array_map('intval', $k['qty_per_kantin']));
         }
-        $qtyDisplay = $qtyValue > 0 ? $qtyValue : 0;
-        $summaryParts[] = htmlspecialchars($namaKondimen) . ' (<strong>' . $qtyDisplay . '</strong>)';
+
+        if ($qty > 0) {
+          $summaryParts[] = htmlspecialchars($nama) . ' (<strong>' . $qty . '</strong>)';
+        }
       }
       $summaryText = !empty($summaryParts) ? implode(', ', $summaryParts) : '-';
     ?>
       <table class="special-summary-table">
         <thead>
           <tr>
-            <!-- <th style="width:25px;">No.</th> -->
-            <th class="col-summary">Kondimen Menu</th>
-            <th class="col-total">TOTAL</th>
+            <th style="text-align:left; padding-left:5px;">Detail Kondimen</th>
+            <th class="col-total" style="width:40px;">TOTAL</th>
           </tr>
         </thead>
         <tbody>
           <tr>
-            <!-- <td style="text-align:center;">1</td> -->
-            <td class="col-summary"><?= $summaryText ?></td>
-            <td class="col-total"><?= $totalOrderMenu ?></td>
+            <td style="text-align:left; line-height:1.3; padding:4px;"><?= $summaryText ?></td>
+            <td class="col-total" style="font-size:8pt;"><?= $totalOrderMenu ?></td>
           </tr>
         </tbody>
       </table>
@@ -575,12 +569,12 @@ function renderMenuTable($menu, $kantins, $customerName = '')
       <table class="data-table">
         <thead>
           <tr>
-            <th class="text-left col-kondimen">Kondimen Menu</th>
-            <?php foreach ($kantins as $kantin) : ?>
-              <th>Qty <?= htmlspecialchars($kantin) ?></th>
+            <th class="text-left col-kondimen">Kondimen</th>
+            <?php foreach ($kantins as $k) : ?>
+              <th><?= htmlspecialchars(substr($k, 0, 3)) ?></th>
             <?php endforeach; ?>
-            <th style="width:20px;">JML</th>
-            <th class="col-total-merged" style="width:25px;">TOTAL</th>
+            <th style="width:25px;">JML</th>
+            <th class="col-total-merged" style="width:30px;">ALL</th>
           </tr>
         </thead>
         <tbody>
@@ -589,26 +583,21 @@ function renderMenuTable($menu, $kantins, $customerName = '')
           $count = count($kondimenList);
           if ($count > 0) :
             foreach ($kondimenList as $idx => $kondimen) :
-              $namaKondimen = isset($kondimen['menu_kondimen']) ? $kondimen['menu_kondimen'] : (isset($kondimen['nama_kondimen']) ? $kondimen['nama_kondimen'] : '-');
+              $nama = isset($kondimen['menu_kondimen']) ? $kondimen['menu_kondimen'] : (isset($kondimen['nama_kondimen']) ? $kondimen['nama_kondimen'] : '-');
           ?>
               <tr>
                 <td class="text-left col-kondimen-cell">
                   <span class="kondimen-number"><?= $rowNo++ ?>.</span>
-                  <span class="kondimen-name"><?= htmlspecialchars($namaKondimen) ?></span>
+                  <span class="kondimen-name"><?= htmlspecialchars($nama) ?></span>
                 </td>
-                <?php foreach ($kantins as $kantin) :
-                  $qtySafe = 0;
-                  if (isset($kondimen['qty_per_kantin']) && is_array($kondimen['qty_per_kantin'])) {
-                    $qtySafe = isset($kondimen['qty_per_kantin'][$kantin]) ? intval($kondimen['qty_per_kantin'][$kantin]) : 0;
-                  }
+                <?php foreach ($kantins as $k) :
+                  $q = (isset($kondimen['qty_per_kantin']) && isset($kondimen['qty_per_kantin'][$k])) ? intval($kondimen['qty_per_kantin'][$k]) : 0;
                 ?>
-                  <td class="text-qty"><?= ($qtySafe > 0) ? $qtySafe : '' ?></td>
+                  <td class="text-center"><?= ($q > 0) ? $q : '' ?></td>
                 <?php endforeach; ?>
-
-                <td style="background-color:#f2f2f2; font-weight:bold;">
-                  <?= isset($kondimen['total']) && $kondimen['total'] > 0 ? $kondimen['total'] : '' ?>
+                <td style="background:#f2f2f2; font-weight:bold; text-align:center;">
+                  <?= (isset($kondimen['total']) && $kondimen['total'] > 0) ? $kondimen['total'] : '' ?>
                 </td>
-
                 <?php if ($idx === 0) : ?>
                   <td class="col-total-merged" rowspan="<?= $count ?>">
                     <?= $totalOrderMenu ?>
@@ -618,7 +607,7 @@ function renderMenuTable($menu, $kantins, $customerName = '')
             <?php endforeach;
           else : ?>
             <tr>
-              <td colspan="<?= 3 + count($kantins) ?>">Empty</td>
+              <td colspan="<?= 3 + count($kantins) ?>">No Data</td>
             </tr>
           <?php endif; ?>
         </tbody>
@@ -628,13 +617,10 @@ function renderMenuTable($menu, $kantins, $customerName = '')
 <?php
 }
 
-function isSpecialSummaryCustomer($customerName)
+function isSpecialSummaryCustomer($name)
 {
-  if (empty($customerName)) {
-    return false;
-  }
-  $normalized = strtolower($customerName);
-  return (strpos($normalized, 'astra') !== false) &&
-    (strpos($normalized, 'daihatsu') !== false || strpos($normalized, 'dihatsu') !== false);
+  if (empty($name)) return false;
+  $n = strtolower($name);
+  return (strpos($n, 'astra') !== false) && (strpos($n, 'daihatsu') !== false || strpos($n, 'dihatsu') !== false);
 }
 ?>
